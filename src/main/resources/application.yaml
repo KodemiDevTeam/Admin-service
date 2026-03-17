@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: Admin-service
+jwt:
+  secret: k8Jd9wQ2x+4aB3d1FJtL8vZ5X0yQ1V7n2gHqM4sP1tE=
+eureka:
+  client:
+    service-url:
+      defaultZone: http://172.18.6.203:8761/eureka/
+  instance:
+    prefer-ip-address: true
+dynamodb:
+  region: eu-north-1
+  cloud:
+    aws:
+      region:
+        static: eu-north-1
+      stack:
+        auto: false
+  aws:
+    s3:
+      region: eu-north-1
+      bucket-name: profile-picture-kodemi
+  feign:
+    httpclient:
+      enabled: true
