@@ -1,4 +1,4 @@
-package com.example.admin_service.dto;
+package com.example.admin_service.dto.response;
 
 import com.example.admin_service.enums.AdminRole;
 import lombok.*;

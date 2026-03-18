@@ -1,8 +1,8 @@
 package com.example.admin_service.feign;
 
-import com.example.admin_service.dto.AdminLoginDTO;
-import com.example.admin_service.dto.AdminResponseDTO;
-import com.example.admin_service.dto.UserDTO;
+import com.example.admin_service.dto.request.AdminLoginDTO;
+import com.example.admin_service.dto.response.AdminResponseDTO;
+import com.example.admin_service.dto.request.UserDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

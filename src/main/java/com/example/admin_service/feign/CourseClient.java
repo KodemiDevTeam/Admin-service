@@ -1,6 +1,6 @@
 package com.example.admin_service.feign;
 
-import com.example.admin_service.dto.CourseResponseDTO;
+import com.example.admin_service.dto.response.CourseResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

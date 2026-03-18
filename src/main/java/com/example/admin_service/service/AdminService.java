@@ -1,9 +1,9 @@
 package com.example.admin_service.service;
 
-import com.example.admin_service.dto.AdminLoginDTO;
-import com.example.admin_service.dto.AdminResponseDTO;
-import com.example.admin_service.dto.CourseResponseDTO;
-import com.example.admin_service.dto.TrainerResponseDTO;
+import com.example.admin_service.dto.request.AdminLoginDTO;
+import com.example.admin_service.dto.response.AdminResponseDTO;
+import com.example.admin_service.dto.response.CourseResponseDTO;
+import com.example.admin_service.dto.response.TrainerResponseDTO;
 import com.example.admin_service.exceptions.AdminNotFoundException;
 import com.example.admin_service.feign.AuthClient;
 import com.example.admin_service.feign.CourseClient;

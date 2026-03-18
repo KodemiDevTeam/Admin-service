@@ -1,6 +1,5 @@
 package com.example.admin_service.component;
 
-import com.example.admin_service.dto.AdminResponseDTO;
 import com.example.admin_service.feign.UserClient;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -45,37 +44,14 @@ public class RoleCheckAspect {
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
         }
-
         String role = extractUserFromToken(token).get("role", String.class);
 
         if (role != null && Arrays.asList(requiresRole.value()).contains(role)) {
-            return joinPoint.proceed();  // ✅ Allowed
+            return joinPoint.proceed();
         }
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied"); // ❌ Blocked
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
     }
 
-    @Around("@annotation(requiresSuperRole)")
-    public Object checkSuperRole(ProceedingJoinPoint joinPoint, RequiresSuperRole requiresSuperRole) throws Throwable {
-
-        HttpServletRequest request = ((ServletRequestAttributes)
-                RequestContextHolder.getRequestAttributes()).getRequest();
-
-        String token = request.getHeader("Authorization");
-
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
-        }
-
-        String userId = extractUserFromToken(token).get("userId", String.class);
-
-        String role = userClient.getAdmin(userId).getAdminRole();
-        if (role != null && Arrays.asList(requiresSuperRole.value()).contains(role)) {
-            return joinPoint.proceed();  // ✅ Allowed
-        }
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied"); // ❌ Blocked
-    }
 
     private Claims extractUserFromToken(String token) {
         try {
@@ -87,7 +63,7 @@ public class RoleCheckAspect {
                     .getBody();
             return claims;
         } catch (Exception e) {
-            return null;  // expired / invalid token
+            return null;
         }
     }
 }

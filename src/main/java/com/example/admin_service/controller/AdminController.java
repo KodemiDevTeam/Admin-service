@@ -1,13 +1,12 @@
 package com.example.admin_service.controller;
 
 import com.example.admin_service.component.RequiresRole;
-import com.example.admin_service.dto.AdminLoginDTO;
-import com.example.admin_service.dto.CourseResponseDTO;
-import com.example.admin_service.dto.TrainerResponseDTO;
+import com.example.admin_service.dto.request.AdminLoginDTO;
+import com.example.admin_service.dto.response.CourseResponseDTO;
+import com.example.admin_service.dto.response.TrainerResponseDTO;
 import com.example.admin_service.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
