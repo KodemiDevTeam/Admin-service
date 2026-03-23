@@ -1,9 +1,7 @@
 package com.example.admin_service.feign;
 
-import com.example.admin_service.dto.request.AdminLoginDTO;
-import com.example.admin_service.dto.response.AdminResponseDTO;
+import com.example.admin_service.dto.response.AdminLoginRequest;
 import com.example.admin_service.dto.request.UserDTO;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -22,7 +20,7 @@ public interface AuthClient {
     ResponseEntity<Object> checkStatus(
             @RequestParam @Email @NotBlank String email);
     @PostMapping("api/v1/auth/admin/login")
-    Object adminLogin(@Valid @RequestBody AdminLoginDTO request, AdminResponseDTO adminResponseDTO);
+    Object adminLogin(@RequestBody AdminLoginRequest adminResponseDTO);
 
     @GetMapping("api/v1/auth/pending/trainer")
     List<Object> getPendingTrainers();

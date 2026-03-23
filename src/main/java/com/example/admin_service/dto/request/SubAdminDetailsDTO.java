@@ -1,11 +1,9 @@
 package com.example.admin_service.dto.request;
 
-
-import lombok.*;
+import lombok.Getter;
 
 @Getter
-@Setter
-public class AdminLoginDTO {
-    private String adminId;
+public class SubAdminDetailsDTO {
+    private String username;
     private String password;
 }

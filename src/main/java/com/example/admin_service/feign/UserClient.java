@@ -1,7 +1,7 @@
 package com.example.admin_service.feign;
 
-import com.example.admin_service.dto.request.AdminLoginDTO;
 import com.example.admin_service.dto.response.AdminResponseDTO;
+import com.example.admin_service.dto.response.LearnerResponseDTO;
 import com.example.admin_service.dto.response.TrainerResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -19,5 +19,5 @@ public interface UserClient {
     AdminResponseDTO getAdmin(@PathVariable("id") String id);
 
     @GetMapping("api/v1/learner/details/{id}")
-    AdminLoginDTO.LearnerResponseDTO getLearner(@RequestHeader("Authorization") String token, @PathVariable("id") String id);
+    LearnerResponseDTO getLearner(@RequestHeader("Authorization") String token, @PathVariable("id") String id);
 }

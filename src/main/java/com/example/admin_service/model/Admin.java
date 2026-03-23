@@ -1,8 +1,6 @@
 package com.example.admin_service.model;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import com.example.admin_service.enums.AdminRole;
 import lombok.*;
 
@@ -24,7 +22,12 @@ public class Admin {
     private String username;
     @DynamoDBAttribute
     private String userId;
-    @DynamoDBAttribute
+    @DynamoDBTypeConvertedEnum
+    @DynamoDBIndexHashKey(
+            globalSecondaryIndexName = "adminRole-index"
+    )
     private AdminRole adminRole;
+    @DynamoDBAttribute
+    private boolean pending;
 
 }
