@@ -23,6 +23,13 @@ public class GlobalExceptionHandler {
         return response;
     }
 
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<Map<String, Object>> handleNullPointers(NullPointerException ex) {
+        log.warn("Null Value: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND));
+    }
+
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException ex) {
         log.warn("Invalid credentials: {}", ex.getMessage());

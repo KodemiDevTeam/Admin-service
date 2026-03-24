@@ -1,5 +1,6 @@
 package com.example.admin_service.component;
 
+import com.example.admin_service.dto.response.Response;
 import com.example.admin_service.feign.UserClient;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -36,8 +37,14 @@ public class RoleCheckAspect {
     @Around("@annotation(requiresRole)")
     public Object checkRole(ProceedingJoinPoint joinPoint, RequiresRole requiresRole) throws Throwable {
 
-        HttpServletRequest request = ((ServletRequestAttributes)
-                RequestContextHolder.getRequestAttributes()).getRequest();
+        ServletRequestAttributes attributes = (ServletRequestAttributes)
+                RequestContextHolder.getRequestAttributes();
+
+        if (attributes == null) {
+            throw new NullPointerException("Value Not Found.");
+        }
+
+        HttpServletRequest request = attributes.getRequest();
 
         String token = request.getHeader("Authorization");
 
@@ -45,8 +52,10 @@ public class RoleCheckAspect {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
         }
         String role = extractUserFromToken(token).get("role", String.class);
-
-        if (role != null && Arrays.asList(requiresRole.value()).contains(role)) {
+        if (role == null) {
+            throw new NullPointerException("Value Not Found.");
+        }
+        if (Arrays.asList(requiresRole.value()).contains(role)) {
             return joinPoint.proceed();
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");

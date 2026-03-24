@@ -110,9 +110,6 @@ public class AdminService {
     }
 
     public String subAdminCreate(String token, SubAdminRequest request) {
-        if(adminRepository.findByRole(request.getAdminRole()) != null){
-            throw new DuplicateValue("Admin Already Created.");
-        }
         Admin admin = new Admin();
         admin.setAdminId(request.getAdminId());
         PasswordValidator.validate(request.getPassword());
