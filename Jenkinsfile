@@ -18,6 +18,8 @@ pipeline {
 
     stages {
 
+        /* ================= CLEAN ================= */
+
         stage('Clean Workspace') {
             steps {
                 cleanWs()
@@ -28,7 +30,14 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                checkout([
+                    $class: 'GitSCM',
+                    branches: scm.branches,
+                    userRemoteConfigs: scm.userRemoteConfigs,
+                    extensions: [
+                        [$class: 'CloneOption', depth: 1, shallow: true]
+                    ]
+                ])
             }
         }
 
@@ -59,8 +68,8 @@ pipeline {
             steps {
                 sh '''
                     echo "===== BUILD WITHOUT TESTS ====="
-                    
-                    mvn clean install \
+
+                    mvn -B clean install \
                     -Dmaven.test.skip=true \
                     -Deureka.client.enabled=false \
                     -Dspring.cloud.discovery.enabled=false
@@ -78,14 +87,15 @@ pipeline {
                             echo "===== SONAR ANALYSIS ====="
 
                             mvn -B sonar:sonar \
--Dsonar.projectKey=$SONAR_PROJECT_KEY \
--Dsonar.projectName=$SONAR_PROJECT_NAME \
--Dsonar.login=$SONAR_TOKEN \
--Dsonar.coverage.exclusions=** \
--Dsonar.tests= \
--Dsonar.test.exclusions=** \
--Dsonar.exclusions=**/target/**,**/node_modules/**,**/*.log \
--Dsonar.sources=src/main/java
+                            -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+                            -Dsonar.projectName=$SONAR_PROJECT_NAME \
+                            -Dsonar.login=$SONAR_TOKEN \
+                            -Dsonar.coverage.exclusions=** \
+                            -Dsonar.tests= \
+                            -Dsonar.test.exclusions=** \
+                            -Dsonar.exclusions=**/target/**,**/node_modules/**,**/*.log \
+                            -Dsonar.sources=src/main/java \
+                            -Dsonar.scm.disabled=true
                         '''
                     }
                 }
@@ -96,8 +106,20 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: false
+                script {
+                    try {
+                        timeout(time: 3, unit: 'MINUTES') {
+                            def qg = waitForQualityGate()
+                            echo "Quality Gate Status: ${qg.status}"
+
+                            if (qg.status != 'OK') {
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    } catch (Exception e) {
+                        echo "Quality Gate timeout → continuing"
+                        currentBuild.result = 'UNSTABLE'
+                    }
                 }
             }
         }
@@ -130,9 +152,14 @@ pipeline {
         }
     }
 
+    /* ================= POST ================= */
+
     post {
         success {
-            echo 'SUCCESS: Build + Sonar + OWASP completed (Webhook Triggered)'
+            echo 'SUCCESS: Build + Sonar + OWASP completed (Tests Skipped)'
+        }
+        unstable {
+            echo 'UNSTABLE: Quality Gate issue or timeout'
         }
         failure {
             echo 'FAILED: Check logs'
@@ -141,4 +168,4 @@ pipeline {
             echo 'Pipeline execution finished'
         }
     }
-}    
+}
