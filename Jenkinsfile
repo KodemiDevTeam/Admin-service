@@ -77,13 +77,15 @@ pipeline {
                         sh '''
                             echo "===== SONAR ANALYSIS ====="
 
-                            mvn sonar:sonar \
-                            -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                            -Dsonar.projectName=$SONAR_PROJECT_NAME \
-                            -Dsonar.login=$SONAR_TOKEN \
-                            -Dsonar.coverage.exclusions=** \
-                            -Dsonar.tests= \
-                            -Dsonar.test.exclusions=**
+                            mvn -B sonar:sonar \
+-Dsonar.projectKey=$SONAR_PROJECT_KEY \
+-Dsonar.projectName=$SONAR_PROJECT_NAME \
+-Dsonar.login=$SONAR_TOKEN \
+-Dsonar.coverage.exclusions=** \
+-Dsonar.tests= \
+-Dsonar.test.exclusions=** \
+-Dsonar.exclusions=**/target/**,**/node_modules/**,**/*.log \
+-Dsonar.sources=src/main/java
                         '''
                     }
                 }
