@@ -1,10 +1,7 @@
 package com.example.admin_service.component;
 
-import com.example.admin_service.dto.response.Response;
-import com.example.admin_service.feign.UserClient;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import com.example.admin_service.exceptions.NoActiveRequestException;
+import com.example.admin_service.util.JwtUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -12,13 +9,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Arrays;
 
 @Aspect
@@ -27,21 +23,22 @@ public class RoleCheckAspect {
 
     @Value("${jwt.secret}")
     private String secretKeyString;
+    private final JwtUtil jwtUtil;
 
-    private final UserClient userClient;
-
-    public RoleCheckAspect(UserClient userClient) {
-        this.userClient = userClient;
+    public RoleCheckAspect(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
     }
 
     @Around("@annotation(requiresRole)")
     public Object checkRole(ProceedingJoinPoint joinPoint, RequiresRole requiresRole) throws Throwable {
 
-        ServletRequestAttributes attributes = (ServletRequestAttributes)
-                RequestContextHolder.getRequestAttributes();
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
 
-        if (attributes == null) {
-            throw new NullPointerException("Value Not Found.");
+        if (!(requestAttributes instanceof ServletRequestAttributes attributes)) {
+            throw new NoActiveRequestException(
+                    "RequestAttributes is null or not an instance of ServletRequestAttributes. " +
+                            "This usually happens outside an HTTP request thread."
+            );
         }
 
         HttpServletRequest request = attributes.getRequest();
@@ -51,7 +48,7 @@ public class RoleCheckAspect {
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
         }
-        String role = extractUserFromToken(token).get("role", String.class);
+        String role = jwtUtil.extractRole(token);;
         if (role == null) {
             throw new NullPointerException("Value Not Found.");
         }
@@ -61,18 +58,4 @@ public class RoleCheckAspect {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
     }
 
-
-    private Claims extractUserFromToken(String token) {
-        try {
-            byte[] keyBytes = secretKeyString.getBytes(StandardCharsets.UTF_8);
-            Key key = Keys.hmacShaKeyFor(keyBytes);
-            Claims claims = Jwts.parser()
-                    .setSigningKey(key)
-                    .parseClaimsJws(token.replace("Bearer ", ""))
-                    .getBody();
-            return claims;
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

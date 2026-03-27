@@ -36,4 +36,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(buildErrorResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED));
     }
+
+    @ExceptionHandler(NoActiveRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleNoRequest(NoActiveRequestException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND));
+    }
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleOtpInvalidToken(InvalidTokenException ex) {
+        log.warn("Invalid OTP token: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
+    }
 }
