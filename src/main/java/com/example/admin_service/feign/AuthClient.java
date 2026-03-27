@@ -8,7 +8,6 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @FeignClient(name = "auth-service")
 public interface AuthClient {
@@ -21,9 +20,6 @@ public interface AuthClient {
             @RequestParam @Email @NotBlank String email);
     @PostMapping("api/v1/auth/admin/login")
     Object adminLogin(@RequestBody AdminLoginRequest adminResponseDTO);
-
-    @GetMapping("api/v1/auth/pending/trainer")
-    List<Object> getPendingTrainers();
 
     @GetMapping("api/v1/auth/user/id/{userId}")
     UserDTO geUserById(@RequestHeader("Authorization") String token, @PathVariable("userId") String userId);

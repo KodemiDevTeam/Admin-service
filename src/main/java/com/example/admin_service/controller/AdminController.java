@@ -71,8 +71,8 @@ public class AdminController {
 
     @GetMapping("/pending/trainer")
     @RequiresRole("USER_ADMIN")
-    public ResponseEntity<List<Object>> getPendingTrainer(@RequestHeader("Authorization") String token){
-        return ResponseEntity.ok(adminService.getPendingTrainers());
+    public ResponseEntity<List<TrainerResponseDTO>> getPendingTrainer(@RequestHeader("Authorization") String token){
+        return ResponseEntity.ok(adminService.getPendingTrainers(token));
     }
 
     @GetMapping("all/trainers")

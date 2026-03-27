@@ -79,8 +79,8 @@ public class AdminService {
         return courseClient.getAllUnVerifiedCourses(token);
     }
 
-    public List<Object> getPendingTrainers() {
-        return authClient.getPendingTrainers();
+    public List<TrainerResponseDTO> getPendingTrainers(String token) {
+        return userClient.getAllPendingTrainers(token);
     }
 
     public Object login(@Valid AdminLoginDTO request){

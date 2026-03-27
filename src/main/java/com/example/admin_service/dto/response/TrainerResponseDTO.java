@@ -23,6 +23,8 @@ public class TrainerResponseDTO {
     private String emailId;
 
     private String officeName;
+    private String contentUrl;
+    private String rating;
 
     private String officeAddress;
 
@@ -52,10 +54,6 @@ public class TrainerResponseDTO {
     private String gender;
 
     private String globalCertifications;
-
-    private Boolean emailVerified;
-
-    private Boolean phoneVerified;
 
     private String topRegistration;
 
