@@ -126,21 +126,20 @@ pipeline {
 
         /* ================= SECURITY ================= */
 
-        stage('OWASP Dependency Check') {
-            steps {
-                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_KEY')]) {
-
-                    sh 'echo "===== RUNNING OWASP CHECK ====="'
-
-                    dependencyCheck(
-                        additionalArguments: "--nvdApiKey ${NVD_KEY} --format CSV --out . --disableOssIndex",
-                        odcInstallation: 'Default'
-                    )
-                }
-
-                dependencyCheckPublisher pattern: 'dependency-check-report.csv'
-            }
+       stage('OWASP Dependency Check') {
+    steps {
+        withCredentials([string(credentialsId: 'NVD_KEY', variable: 'NVD_KEY')]) {
+            dependencyCheck additionalArguments: "--format XML --format HTML --nvdApiKey=${env.NVD_KEY}",
+                            odcInstallation: 'Default'
         }
+    }
+}
+
+stage('Publish OWASP Report') {
+    steps {
+        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+    }
+}
 
         /* ================= ARCHIVE ================= */
 
