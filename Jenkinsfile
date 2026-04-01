@@ -126,10 +126,10 @@ pipeline {
 
         /* ================= SECURITY ================= */
 
-      stage('OWASP Dependency Check') {
+     stage('OWASP Dependency Check') {
     steps {
         withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-            dependencyCheck additionalArguments: "--format XML --format HTML --nvdApiKey=${NVD_API_KEY}",
+            dependencyCheck additionalArguments: "--format XML --format HTML --nvdApiKey=$NVD_API_KEY",
                             odcInstallation: 'Default'
         }
     }
@@ -143,13 +143,11 @@ stage('Publish OWASP Report') {
 
         /* ================= ARCHIVE ================= */
 
-        stage('Archive Reports') {
-            steps {
-                archiveArtifacts artifacts: 'dependency-check-report.csv',
-                                 fingerprint: true
-            }
-        }
+       stage('Archive Reports') {
+    steps {
+        archiveArtifacts artifacts: 'dependency-check-report.*', fingerprint: true
     }
+}
 
     /* ================= POST ================= */
 
