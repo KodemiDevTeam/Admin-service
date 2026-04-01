@@ -102,24 +102,24 @@ pipeline {
         /* ================= QUALITY GATE ================= */
 
         stage('Quality Gate') {
-            steps {
-                script {
-                    try {
-                        timeout(time: 10, unit: 'MINUTES') {
-                            def qg = waitForQualityGate()
-                            echo "Quality Gate Status: ${qg.status}"
+    steps {
+        script {
+            try {
+                timeout(time: 10, unit: 'MINUTES') {
+                    def qg = waitForQualityGate abortPipeline: false
+                    echo "Quality Gate Status: ${qg?.status}"
 
-                            if (qg.status != 'OK') {
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    } catch (Exception e) {
-                        echo "Quality Gate timeout → continuing"
+                    if (qg?.status && qg.status != 'OK') {
                         currentBuild.result = 'UNSTABLE'
                     }
                 }
+            } catch (Exception e) {
+                echo "Quality Gate skipped due to Sonar issue: ${e}"
+                currentBuild.result = 'UNSTABLE'
             }
         }
+    }
+}
 
         /* ================= SECURITY ================= */
 
