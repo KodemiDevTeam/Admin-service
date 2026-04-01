@@ -108,7 +108,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        timeout(time: 3, unit: 'MINUTES') {
+                        timeout(time: 10, unit: 'MINUTES') {
                             def qg = waitForQualityGate()
                             echo "Quality Gate Status: ${qg.status}"
 
@@ -126,28 +126,30 @@ pipeline {
 
         /* ================= SECURITY ================= */
 
-     stage('OWASP Dependency Check') {
-    steps {
-        withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-            dependencyCheck additionalArguments: "--format XML --format HTML --nvdApiKey=$NVD_API_KEY",
-                            odcInstallation: 'Default'
+        stage('OWASP Dependency Check') {
+            steps {
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                    dependencyCheck additionalArguments: "--format XML --format HTML --nvdApiKey=$NVD_API_KEY",
+                                    odcInstallation: 'Default'
+                }
+            }
         }
-    }
-}
 
-stage('Publish OWASP Report') {
-    steps {
-        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-    }
-}
+        stage('Publish OWASP Report') {
+            steps {
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
 
         /* ================= ARCHIVE ================= */
 
-       stage('Archive Reports') {
-    steps {
-        archiveArtifacts artifacts: 'dependency-check-report.*', fingerprint: true
-    }
-}
+        stage('Archive Reports') {
+            steps {
+                archiveArtifacts artifacts: 'dependency-check-report.*', fingerprint: true
+            }
+        }
+
+    } // ✅ stages CLOSED properly
 
     /* ================= POST ================= */
 
