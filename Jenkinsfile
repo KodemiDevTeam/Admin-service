@@ -77,7 +77,7 @@ pipeline {
             }
         }
 
-        /* ================= SONAR ================= */
+        /* ================= SONAR (FIXED) ================= */
 
         stage('SonarQube Analysis (No Tests)') {
             steps {
@@ -90,11 +90,8 @@ pipeline {
                             -Dsonar.projectKey=$SONAR_PROJECT_KEY \
                             -Dsonar.projectName=$SONAR_PROJECT_NAME \
                             -Dsonar.login=$SONAR_TOKEN \
-                            -Dsonar.coverage.exclusions=** \
-                            -Dsonar.tests= \
-                            -Dsonar.test.exclusions=** \
-                            -Dsonar.exclusions=**/target/**,**/node_modules/**,**/*.log \
                             -Dsonar.sources=src/main/java \
+                            -Dsonar.exclusions=**/target/**,**/node_modules/**,**/*.log \
                             -Dsonar.scm.disabled=true
                         '''
                     }
@@ -149,13 +146,13 @@ pipeline {
             }
         }
 
-    } // ✅ stages CLOSED properly
+    }
 
     /* ================= POST ================= */
 
     post {
         success {
-            echo 'SUCCESS: Build + Sonar + OWASP completed (Tests Skipped)'
+            echo 'SUCCESS: Build + Sonar + OWASP completed (No Tests)'
         }
         unstable {
             echo 'UNSTABLE: Quality Gate issue or timeout'
