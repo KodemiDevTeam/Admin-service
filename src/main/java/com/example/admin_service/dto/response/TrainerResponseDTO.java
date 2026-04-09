@@ -24,6 +24,7 @@ public class TrainerResponseDTO {
 
     private String officeName;
     private String contentUrl;
+    private String resumeUrl;
     private String rating;
 
     private String officeAddress;

@@ -49,7 +49,7 @@ public class AdminService {
         String role = authClient.geUserById(token, id).getRole().name();
         if(Objects.equals(role, "TRAINER")){
             return userClient.getTrainerById(token, id);
-        } else if (Objects.equals(role, "ADMIN")) {
+        } else if (Objects.equals(role, "SUPER_ADMIN")) {
             return userClient.getAdmin( id);
         }else{
             return userClient.getLearner(token, id);

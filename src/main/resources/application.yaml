@@ -6,7 +6,7 @@ jwt:
 eureka:
   client:
     service-url:
-      defaultZone: http://172.18.6.203:8761/eureka/
+      defaultZone: http://172.18.13.94:8761/eureka/
   instance:
     prefer-ip-address: true
 dynamodb:

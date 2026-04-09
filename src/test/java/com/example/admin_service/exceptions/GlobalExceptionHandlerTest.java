@@ -6,56 +6,126 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class GlobalExceptionHandlerTest {
+class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
+    // ===== NULL POINTER =====
     @Test
-    void testHandleNullPointers() {
-        com.example.admin_service.exceptions.NullPointerException ex = new com.example.admin_service.exceptions.NullPointerException("Null error");
-        ResponseEntity<Map<String, Object>> response = handler.handleNullPointers(ex);
+    void testHandleNullPointers_fullCoverage() {
+        NullPointerException ex = new NullPointerException("Null error");
+
+        ResponseEntity<Map<String, Object>> response =
+                handler.handleNullPointers(ex);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(HttpStatus.NOT_FOUND.value(), response.getBody().get("status"));
-        assertEquals("Null error", response.getBody().get("message"));
-        assertNotNull(response.getBody().get("timestamp"));
-        assertEquals(HttpStatus.NOT_FOUND.getReasonPhrase(), response.getBody().get("error"));
+
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), body.get("status"));
+        assertEquals("Null error", body.get("message"));
+        assertEquals(HttpStatus.NOT_FOUND.getReasonPhrase(), body.get("error"));
+        assertNotNull(body.get("timestamp"));
     }
 
+    // ===== INVALID CREDENTIALS =====
     @Test
-    void testHandleInvalidCredentials() {
-        InvalidCredentialsException ex = new InvalidCredentialsException("Invalid");
-        ResponseEntity<Map<String, Object>> response = handler.handleInvalidCredentials(ex);
+    void testHandleInvalidCredentials_fullCoverage() {
+        InvalidCredentialsException ex =
+                new InvalidCredentialsException("Invalid credentials");
+
+        ResponseEntity<Map<String, Object>> response =
+                handler.handleInvalidCredentials(ex);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(HttpStatus.UNAUTHORIZED.value(), response.getBody().get("status"));
-        assertEquals("Invalid", response.getBody().get("message"));
+
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+
+        assertEquals(HttpStatus.UNAUTHORIZED.value(), body.get("status"));
+        assertEquals("Invalid credentials", body.get("message"));
+        assertEquals(HttpStatus.UNAUTHORIZED.getReasonPhrase(), body.get("error"));
+        assertNotNull(body.get("timestamp"));
     }
 
     @Test
-    void testHandleNoRequest() {
-        NoActiveRequestException ex = new NoActiveRequestException("No active request");
-        ResponseEntity<Map<String, Object>> response = handler.handleNoRequest(ex);
+    void testHandleInvalidCredentials_nullMessage() {
+        InvalidCredentialsException ex =
+                new InvalidCredentialsException(null);
+
+        ResponseEntity<Map<String, Object>> response =
+                handler.handleInvalidCredentials(ex);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+
+        assertNull(body.get("message"));
+        assertEquals(HttpStatus.UNAUTHORIZED.value(), body.get("status"));
+        assertEquals(HttpStatus.UNAUTHORIZED.getReasonPhrase(), body.get("error"));
+        assertNotNull(body.get("timestamp"));
+    }
+
+    // ===== NO ACTIVE REQUEST =====
+    @Test
+    void testHandleNoRequest_fullCoverage() {
+        NoActiveRequestException ex =
+                new NoActiveRequestException("No active request");
+
+        ResponseEntity<Map<String, Object>> response =
+                handler.handleNoRequest(ex);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(HttpStatus.NOT_FOUND.value(), response.getBody().get("status"));
-        assertEquals("No active request", response.getBody().get("message"));
+
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), body.get("status"));
+        assertEquals("No active request", body.get("message"));
+        assertEquals(HttpStatus.NOT_FOUND.getReasonPhrase(), body.get("error"));
+        assertNotNull(body.get("timestamp"));
+    }
+
+    // ===== INVALID TOKEN =====
+    @Test
+    void testHandleInvalidToken_fullCoverage() {
+        InvalidTokenException ex =
+                new InvalidTokenException("Invalid token", null);
+
+        ResponseEntity<Map<String, Object>> response =
+                handler.handleOtpInvalidToken(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), body.get("status"));
+        assertEquals("Invalid token", body.get("message"));
+        assertEquals(HttpStatus.BAD_REQUEST.getReasonPhrase(), body.get("error"));
+        assertNotNull(body.get("timestamp"));
     }
 
     @Test
-    void testHandleOtpInvalidToken() {
-        InvalidTokenException ex = new InvalidTokenException("Invalid token", null);
-        ResponseEntity<Map<String, Object>> response = handler.handleOtpInvalidToken(ex);
+    void testHandleInvalidToken_nullMessage() {
+        InvalidTokenException ex =
+                new InvalidTokenException(null, null);
+
+        ResponseEntity<Map<String, Object>> response =
+                handler.handleOtpInvalidToken(ex);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getBody().get("status"));
-        assertEquals("Invalid token", response.getBody().get("message"));
+
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+
+        assertNull(body.get("message"));
+        assertEquals(HttpStatus.BAD_REQUEST.value(), body.get("status"));
+        assertEquals(HttpStatus.BAD_REQUEST.getReasonPhrase(), body.get("error"));
+        assertNotNull(body.get("timestamp"));
     }
 }

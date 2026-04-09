@@ -40,7 +40,21 @@ class AdminControllerTest {
 
         ResponseEntity<String> response = adminController.subAdmin(TOKEN, request);
 
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals("Created", response.getBody());
+        verify(adminService).subAdminCreate(TOKEN, request);
+    }
+
+    @Test
+    void subAdmin_nullResponse() {
+        SubAdminRequest request = new SubAdminRequest();
+
+        when(adminService.subAdminCreate(TOKEN, request)).thenReturn(null);
+
+        ResponseEntity<String> response = adminController.subAdmin(TOKEN, request);
+
+        assertNull(response.getBody());
+        verify(adminService).subAdminCreate(TOKEN, request);
     }
 
     // ===== UPDATE SUB ADMIN =====
@@ -52,7 +66,20 @@ class AdminControllerTest {
 
         ResponseEntity<Object> response = adminController.setSubAdmin(request, TOKEN);
 
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals("Updated", response.getBody());
+        verify(adminService).setSubAdmin(request, TOKEN);
+    }
+
+    @Test
+    void setSubAdmin_null() {
+        SubAdminDetailsDTO request = new SubAdminDetailsDTO();
+
+        when(adminService.setSubAdmin(request, TOKEN)).thenReturn(null);
+
+        ResponseEntity<Object> response = adminController.setSubAdmin(request, TOKEN);
+
+        assertNull(response.getBody());
     }
 
     // ===== CHANGE PASSWORD =====
@@ -65,7 +92,21 @@ class AdminControllerTest {
 
         ResponseEntity<String> response = adminController.updatePassword(request, TOKEN);
 
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals("Changed", response.getBody());
+        verify(adminService).changePassword("newPass", TOKEN);
+    }
+
+    @Test
+    void changePassword_exception() {
+        PasswordChange request = new PasswordChange();
+        request.setPassword("bad");
+
+        when(adminService.changePassword("bad", TOKEN))
+                .thenThrow(new RuntimeException());
+
+        assertThrows(RuntimeException.class,
+                () -> adminController.updatePassword(request, TOKEN));
     }
 
     // ===== LOGIN =====
@@ -78,48 +119,65 @@ class AdminControllerTest {
         ResponseEntity<Object> response = adminController.adminLogin(request);
 
         assertEquals("token", response.getBody());
+        verify(adminService).login(request);
+    }
+
+    @Test
+    void login_exception() {
+        AdminLoginDTO request = new AdminLoginDTO();
+
+        when(adminService.login(request)).thenThrow(new RuntimeException());
+
+        assertThrows(RuntimeException.class,
+                () -> adminController.adminLogin(request));
     }
 
     // ===== GET USER =====
     @Test
     void getUser_success() {
-        String userId = "user123";
+        when(adminService.getUser(TOKEN, "1")).thenReturn("data");
 
-        when(adminService.getUser(TOKEN, userId)).thenReturn("userData");
+        ResponseEntity<Object> response = adminController.getTrainer(TOKEN, "1");
 
-        ResponseEntity<Object> response = adminController.getTrainer(TOKEN, userId);
-
-        assertEquals("userData", response.getBody());
+        assertEquals("data", response.getBody());
+        verify(adminService).getUser(TOKEN, "1");
     }
 
-    // ===== APPROVE TRAINER =====
     @Test
-    void approveTrainer_success() {
-        String trainerId = "trainer1";
+    void getUser_null() {
+        when(adminService.getUser(TOKEN, "1")).thenReturn(null);
 
-        when(adminService.trainerApprove(TOKEN, trainerId)).thenReturn("approved");
+        ResponseEntity<Object> response = adminController.getTrainer(TOKEN, "1");
 
-        ResponseEntity<Object> response = adminController.approveTrainer(TOKEN, trainerId);
-
-        assertEquals("approved", response.getBody());
+        assertNull(response.getBody());
     }
 
-    // ===== REJECT TRAINER =====
+    // ===== TRAINER =====
     @Test
-    void rejectTrainer_success() {
-        String trainerId = "trainer1";
+    void approveTrainer() {
+        when(adminService.trainerApprove(TOKEN, "t1")).thenReturn("ok");
 
-        when(adminService.rejectApprove(TOKEN, trainerId)).thenReturn("rejected");
+        ResponseEntity<Object> response =
+                adminController.approveTrainer(TOKEN, "t1");
 
-        ResponseEntity<Object> response = adminController.rejectTrainer(TOKEN, trainerId);
-
-        assertEquals("rejected", response.getBody());
+        assertEquals("ok", response.getBody());
+        verify(adminService).trainerApprove(TOKEN, "t1");
     }
 
-    // ===== GET PENDING TRAINERS =====
     @Test
-    void getPendingTrainer_success() {
-        List<TrainerResponseDTO> list = List.of(new TrainerResponseDTO());
+    void rejectTrainer() {
+        when(adminService.rejectApprove(TOKEN, "t1")).thenReturn("no");
+
+        ResponseEntity<Object> response =
+                adminController.rejectTrainer(TOKEN, "t1");
+
+        assertEquals("no", response.getBody());
+    }
+
+    // ===== TRAINER LIST =====
+    @Test
+    void getPendingTrainer() {
+        List<TrainerResponseDTO> list = List.of();
 
         when(adminService.getPendingTrainers(TOKEN)).thenReturn(list);
 
@@ -129,10 +187,9 @@ class AdminControllerTest {
         assertEquals(list, response.getBody());
     }
 
-    // ===== GET ALL TRAINERS =====
     @Test
-    void getAllTrainer_success() {
-        List<TrainerResponseDTO> list = List.of(new TrainerResponseDTO());
+    void getAllTrainer() {
+        List<TrainerResponseDTO> list = List.of();
 
         when(adminService.getAllTrainer(TOKEN)).thenReturn(list);
 
@@ -142,20 +199,10 @@ class AdminControllerTest {
         assertEquals(list, response.getBody());
     }
 
-    // ===== GET ALL UNVERIFIED COURSES =====
+    // ===== COURSE =====
     @Test
-    void getAllUnverified_success() {
-        CourseResponseDTO dto = CourseResponseDTO.builder()
-                .courseId("c1")
-                .courseCode("JAVA101")
-                .slug("java-course")
-                .version(1)
-                .createdAt(new java.util.Date())
-                .updatedAt(new java.util.Date())
-                .createdBy("admin")
-                .build();
-
-        List<CourseResponseDTO> list = List.of(dto);
+    void getAllUnverified() {
+        List<CourseResponseDTO> list = List.of();
 
         when(adminService.getAllUnVerified(TOKEN)).thenReturn(list);
 
@@ -165,29 +212,23 @@ class AdminControllerTest {
         assertEquals(list, response.getBody());
     }
 
-    // ===== VERIFY COURSE =====
     @Test
-    void verifyCourse_success() {
-        String courseId = "course1";
-
-        when(adminService.verifyCourse(TOKEN, courseId)).thenReturn("verified");
+    void verifyCourse() {
+        when(adminService.verifyCourse(TOKEN, "c1")).thenReturn("done");
 
         ResponseEntity<Object> response =
-                adminController.verifyCourse(TOKEN, courseId);
+                adminController.verifyCourse(TOKEN, "c1");
 
-        assertEquals("verified", response.getBody());
+        assertEquals("done", response.getBody());
     }
 
-    // ===== REJECT COURSE =====
     @Test
-    void rejectCourse_success() {
-        String courseId = "course1";
-
-        when(adminService.rejectCourse(TOKEN, courseId)).thenReturn("rejected");
+    void rejectCourse() {
+        when(adminService.rejectCourse(TOKEN, "c1")).thenReturn("fail");
 
         ResponseEntity<Object> response =
-                adminController.rejectCourse(TOKEN, courseId);
+                adminController.rejectCourse(TOKEN, "c1");
 
-        assertEquals("rejected", response.getBody());
+        assertEquals("fail", response.getBody());
     }
 }
