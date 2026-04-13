@@ -80,6 +80,7 @@ class AdminControllerTest {
         ResponseEntity<Object> response = adminController.setSubAdmin(request, TOKEN);
 
         assertNull(response.getBody());
+        verify(adminService).setSubAdmin(request, TOKEN);
     }
 
     // ===== CHANGE PASSWORD =====
@@ -103,7 +104,7 @@ class AdminControllerTest {
         request.setPassword("bad");
 
         when(adminService.changePassword("bad", TOKEN))
-                .thenThrow(new RuntimeException());
+                .thenThrow(new RuntimeException("Error"));
 
         assertThrows(RuntimeException.class,
                 () -> adminController.updatePassword(request, TOKEN));
@@ -150,6 +151,7 @@ class AdminControllerTest {
         ResponseEntity<Object> response = adminController.getTrainer(TOKEN, "1");
 
         assertNull(response.getBody());
+        verify(adminService).getUser(TOKEN, "1");
     }
 
     // ===== TRAINER =====
@@ -172,6 +174,7 @@ class AdminControllerTest {
                 adminController.rejectTrainer(TOKEN, "t1");
 
         assertEquals("no", response.getBody());
+        verify(adminService).rejectApprove(TOKEN, "t1");
     }
 
     // ===== TRAINER LIST =====
@@ -185,6 +188,7 @@ class AdminControllerTest {
                 adminController.getPendingTrainer(TOKEN);
 
         assertEquals(list, response.getBody());
+        verify(adminService).getPendingTrainers(TOKEN);
     }
 
     @Test
@@ -197,6 +201,7 @@ class AdminControllerTest {
                 adminController.getAllTrainer(TOKEN);
 
         assertEquals(list, response.getBody());
+        verify(adminService).getAllTrainer(TOKEN);
     }
 
     // ===== COURSE =====
@@ -210,6 +215,7 @@ class AdminControllerTest {
                 adminController.getAllUnVerified(TOKEN);
 
         assertEquals(list, response.getBody());
+        verify(adminService).getAllUnVerified(TOKEN);
     }
 
     @Test
@@ -220,6 +226,7 @@ class AdminControllerTest {
                 adminController.verifyCourse(TOKEN, "c1");
 
         assertEquals("done", response.getBody());
+        verify(adminService).verifyCourse(TOKEN, "c1");
     }
 
     @Test
@@ -230,5 +237,87 @@ class AdminControllerTest {
                 adminController.rejectCourse(TOKEN, "c1");
 
         assertEquals("fail", response.getBody());
+        verify(adminService).rejectCourse(TOKEN, "c1");
+    }
+
+    // ===== PAYOUT =====
+    @Test
+    void getPendingPayouts() {
+        List<PayoutRequest> list = List.of(new PayoutRequest());
+
+        when(adminService.getPendingPayout()).thenReturn(list);
+
+        ResponseEntity<List<PayoutRequest>> response =
+                adminController.getPendingPayouts(TOKEN);
+
+        assertEquals(list, response.getBody());
+        verify(adminService).getPendingPayout();
+    }
+
+    @Test
+    void getPendingPayouts_empty() {
+        when(adminService.getPendingPayout()).thenReturn(List.of());
+
+        ResponseEntity<List<PayoutRequest>> response =
+                adminController.getPendingPayouts(TOKEN);
+
+        assertTrue(response.getBody().isEmpty());
+    }
+
+    @Test
+    void processPayoutRequest_success() {
+        ProcessPayoutRequest request = new ProcessPayoutRequest();
+
+        when(adminService.processPayoutRequest(TOKEN, request))
+                .thenReturn("processed");
+
+        ResponseEntity<String> response =
+                adminController.processPayoutRequest(TOKEN, request);
+
+        assertEquals("processed", response.getBody());
+        verify(adminService).processPayoutRequest(TOKEN, request);
+    }
+
+    @Test
+    void processPayoutRequest_exception() {
+        ProcessPayoutRequest request = new ProcessPayoutRequest();
+
+        when(adminService.processPayoutRequest(TOKEN, request))
+                .thenThrow(new RuntimeException());
+
+        assertThrows(RuntimeException.class,
+                () -> adminController.processPayoutRequest(TOKEN, request));
+    }
+
+    @Test
+    void processPayoutRequestByPath_success() {
+        when(adminService.processPayoutRequestByPath(TOKEN, "APPROVE", "p1", "ok"))
+                .thenReturn("done");
+
+        ResponseEntity<String> response =
+                adminController.processPayoutRequestByPath("p1", "APPROVE", "ok", TOKEN);
+
+        assertEquals("done", response.getBody());
+        verify(adminService).processPayoutRequestByPath(TOKEN, "APPROVE", "p1", "ok");
+    }
+
+    @Test
+    void processPayoutRequestByPath_nullRemarks() {
+        when(adminService.processPayoutRequestByPath(TOKEN, "REJECT", "p1", null))
+                .thenReturn("rejected");
+
+        ResponseEntity<String> response =
+                adminController.processPayoutRequestByPath("p1", "REJECT", null, TOKEN);
+
+        assertEquals("rejected", response.getBody());
+    }
+
+    @Test
+    void processPayoutRequestByPath_exception() {
+        when(adminService.processPayoutRequestByPath(any(), any(), any(), any()))
+                .thenThrow(new RuntimeException());
+
+        assertThrows(RuntimeException.class,
+                () -> adminController.processPayoutRequestByPath("p1", "APPROVE", "ok", TOKEN));
     }
 }

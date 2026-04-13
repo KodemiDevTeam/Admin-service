@@ -1,10 +1,7 @@
 package com.example.admin_service.controller;
 
 import com.example.admin_service.component.RequiresRole;
-import com.example.admin_service.dto.request.AdminLoginDTO;
-import com.example.admin_service.dto.request.PasswordChange;
-import com.example.admin_service.dto.request.SubAdminDetailsDTO;
-import com.example.admin_service.dto.request.SubAdminRequest;
+import com.example.admin_service.dto.request.*;
 import com.example.admin_service.dto.response.CourseResponseDTO;
 import com.example.admin_service.dto.response.TrainerResponseDTO;
 import com.example.admin_service.service.AdminService;
@@ -98,4 +95,29 @@ public class AdminController {
                                                @PathVariable("courseId") String courseId){
         return ResponseEntity.ok(adminService.rejectCourse(token, courseId));
     }
+
+    @GetMapping("/payouts/pending")
+    @RequiresRole({"SUPER_ADMIN", "PAYMENT_ADMIN"})
+    public ResponseEntity<List<PayoutRequest>> getPendingPayouts(@RequestHeader("Authorization") String token){
+        return ResponseEntity.ok(adminService.getPendingPayout());
+    }
+
+    @PostMapping("/payouts/process")
+    @RequiresRole({"SUPER_ADMIN", "PAYMENT_ADMIN"})
+    public ResponseEntity<String> processPayoutRequest(@RequestHeader("Authorization") String token, @RequestBody ProcessPayoutRequest request){
+        return ResponseEntity.ok(adminService.processPayoutRequest(token, request));
+    }
+
+    @PostMapping("/payouts/process/{payoutId}")
+    @RequiresRole({"SUPER_ADMIN", "PAYMENT_ADMIN"})
+    public ResponseEntity<String> processPayoutRequestByPath(@PathVariable String payoutId,
+                                                             @RequestParam String action, // APPROVE or REJECT
+                                                             @RequestParam(required = false) String remarks,
+                                                             @RequestHeader("Authorization") String token) {
+        return ResponseEntity.ok(adminService.processPayoutRequestByPath(token,action,payoutId,remarks));
+    }
+
+
+
+
 }

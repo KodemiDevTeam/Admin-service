@@ -48,4 +48,38 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
     }
+    @ExceptionHandler(FetchPendingPayoutException.class)
+    public ResponseEntity<Map<String, Object>> handleFetchPendingPayout(FetchPendingPayoutException ex){
+        log.warn("Fetch Failed: {}", ex.getMessage());
+        return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(InvalidPayoutActionException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidPayoutActionException ex){
+        log.warn("Wrong Payout Action: {}", ex.getMessage());
+        return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(PaymentClientException.class)
+    public ResponseEntity<Map<String, Object>> handlePaymentClientException(PaymentClientException ex){
+        log.warn("Payment Exception: {}", ex.getMessage());
+        return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(UnauthorizedPayoutAccessException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedPayoutAccessException(UnauthorizedPayoutAccessException ex){
+        log.warn("Unauthorized Payout: {}", ex.getMessage());
+        return  ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED));
+    }
+
+    @ExceptionHandler(PayoutProcessingException.class)
+    public ResponseEntity<Map<String, Object>> handlePayoutProcessingException(PayoutProcessingException ex){
+        log.warn("Invalid Payout Process: {}", ex.getMessage());
+        return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
+    }
 }

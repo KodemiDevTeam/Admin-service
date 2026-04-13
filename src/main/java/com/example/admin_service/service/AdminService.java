@@ -1,18 +1,15 @@
 package com.example.admin_service.service;
 
-import com.example.admin_service.dto.request.AdminLoginDTO;
-import com.example.admin_service.dto.request.SubAdminDetailsDTO;
-import com.example.admin_service.dto.request.SubAdminRequest;
+import com.example.admin_service.dto.request.*;
 import com.example.admin_service.dto.response.AdminLoginRequest;
 import com.example.admin_service.dto.response.CourseResponseDTO;
 import com.example.admin_service.dto.response.Response;
 import com.example.admin_service.dto.response.TrainerResponseDTO;
 import com.example.admin_service.enums.AdminRole;
-import com.example.admin_service.exceptions.AdminNotFoundException;
-import com.example.admin_service.exceptions.DuplicateValue;
-import com.example.admin_service.exceptions.InvalidCredentialsException;
+import com.example.admin_service.exceptions.*;
 import com.example.admin_service.feign.AuthClient;
 import com.example.admin_service.feign.CourseClient;
+import com.example.admin_service.feign.PaymentClient;
 import com.example.admin_service.feign.UserClient;
 import com.example.admin_service.model.Admin;
 import com.example.admin_service.repository.AdminRepository;
@@ -33,14 +30,16 @@ public class AdminService {
     private final UserClient userClient;
     private final AuthClient authClient;
     private final CourseClient courseClient;
+    private  final PaymentClient paymentClient;
     private  final AdminRepository adminRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
         this.userClient = userClient;
         this.authClient = authClient;
         this.courseClient = courseClient;
+        this.paymentClient = paymentClient;
         this.adminRepository = adminRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
@@ -149,5 +148,37 @@ public class AdminService {
         admin.setPassword(hashedPassword);
         adminRepository.save(admin);
         return "Password Changed Successfully.";
+    }
+
+    public List<PayoutRequest> getPendingPayout() {
+        try {
+            return paymentClient.getPendingPayouts();
+        } catch (Exception ex) {
+            throw new FetchPendingPayoutException("Failed to fetch pending payouts");
+        }
+    }
+
+    public String processPayoutRequest(String token, ProcessPayoutRequest request) {
+        if (token == null || token.isBlank()) {
+            throw new UnauthorizedPayoutAccessException("Invalid token");
+        }
+
+        try {
+            return paymentClient.processPayoutRequest(request, token);
+        } catch (Exception ex) {
+            throw new PayoutProcessingException("Failed to process payout request");
+        }
+    }
+
+    public String processPayoutRequestByPath(String token, String action, String payoutId, String remarks) {
+        if (!action.equalsIgnoreCase("APPROVE") && !action.equalsIgnoreCase("REJECT")) {
+            throw new InvalidPayoutActionException("Invalid action: " + action);
+        }
+
+        try {
+            return paymentClient.processPayoutRequestByPath(token, action, payoutId, remarks);
+        } catch (Exception ex) {
+            throw new PaymentClientException("Error while calling payment service");
+        }
     }
 }
