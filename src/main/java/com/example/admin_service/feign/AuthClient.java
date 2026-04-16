@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "auth-service")
 public interface AuthClient {
+	
     @PostMapping("api/v1/auth/internal/trainer/activate/{userId}")
     ResponseEntity<Object> activateTrainer(@RequestHeader("Authorization") String token, @PathVariable String userId);
     @PostMapping("/internal/trainer/reject/{userId}")

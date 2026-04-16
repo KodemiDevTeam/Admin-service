@@ -9,8 +9,10 @@ import java.util.List;
 
 @FeignClient(name = "course-service")
 public interface CourseClient {
+	
     @GetMapping("/api/v1/course/all/unverified")
     List<CourseResponseDTO> getAllUnVerifiedCourses(@RequestHeader("Authorization") String token);
+    
     @PostMapping("/api/v1/course/internal/reject/{courseId}")
     ResponseEntity<Object> rejectCourse(@RequestHeader("Authorization") String token, @PathVariable("courseId") String courseId);
 
