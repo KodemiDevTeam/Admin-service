@@ -66,10 +66,10 @@ pipeline {
 
         stage('Build (No Tests)') {
             steps {
-                sh '''
-                    echo "===== BUILD WITHOUT TESTS ====="
-
-                    mvn -B clean install \
+               sh '''
+echo ===== BUILD WITHOUT TESTS =====
+chmod +x mvnw
+./mvnw -B clean install 
                     -Dmaven.test.skip=true \
                     -Deureka.client.enabled=false \
                     -Dspring.cloud.discovery.enabled=false
