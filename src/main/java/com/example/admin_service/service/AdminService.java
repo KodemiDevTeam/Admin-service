@@ -95,7 +95,7 @@ public class AdminService {
 
     public Object login(@Valid AdminLoginDTO request){
         String email = request.getEmail();
-        Admin admin = adminRepository.findById(email);
+        Admin admin = adminRepository.findByEmail(email);
 
         if(admin == null){
             log.warn("Login failed – not found: {}", email);
