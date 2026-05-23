@@ -30,3 +30,29 @@ dynamodb:
 feign:
   httpclient:
     enabled: true
+
+mail:
+
+  host: smtp.gmail.com
+
+  port: 587
+
+  username: ${mail_username}
+
+  password: ${mail_password}
+
+  properties:
+
+    mail:
+
+      smtp:
+
+        auth: true
+
+        starttls:
+
+          enable: true
+
+        ssl:
+
+          trust: smtp.gmail.com
