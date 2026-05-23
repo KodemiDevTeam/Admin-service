@@ -38,6 +38,18 @@ public class AdminRepository {
         List<Admin> results =  dynamoDBMapper.query(Admin.class, queryExpression);
         return results.isEmpty() ? null : results.get(0);
     }
+    public Admin findByEmail(String email){
+        Admin admin = new Admin();
+        admin.setEmail(email);
+
+        DynamoDBQueryExpression<Admin> queryExpression =
+                new DynamoDBQueryExpression<Admin>()
+                        .withIndexName("email-index")
+                        .withHashKeyValues(admin)
+                        .withConsistentRead(false);
+        List<Admin> results =  dynamoDBMapper.query(Admin.class, queryExpression);
+        return results.isEmpty() ? null : results.get(0);
+    }
 
     public void delete(String adminId) {
         Admin admin = dynamoDBMapper.load(Admin.class, adminId);

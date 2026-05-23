@@ -20,12 +20,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Slf4j
 @Service
 public class AdminService {
+
+    private static final String CHARACTERS =
+                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+                    "abcdefghijklmnopqrstuvwxyz" +
+                    "0123456789" +
+                    "@#$%&*!";
 
     private final UserClient userClient;
     private final AuthClient authClient;
@@ -34,8 +43,9 @@ public class AdminService {
     private  final AdminRepository adminRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private  final SecureRandom random;
 
-    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, SecureRandom random) {
         this.userClient = userClient;
         this.authClient = authClient;
         this.courseClient = courseClient;
@@ -43,6 +53,7 @@ public class AdminService {
         this.adminRepository = adminRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+        this.random = random;
     }
     public Object getUser(String token, String id) {
         String role = authClient.geUserById(token, id).getRole().name();
@@ -83,11 +94,11 @@ public class AdminService {
     }
 
     public Object login(@Valid AdminLoginDTO request){
-        String adminId = request.getAdminId();
-        Admin admin = adminRepository.findById(adminId);
+        String email = request.getEmail();
+        Admin admin = adminRepository.findById(email);
 
         if(admin == null){
-            log.warn("Login failed – not found: {}", adminId);
+            log.warn("Login failed – not found: {}", email);
             throw new AdminNotFoundException("Sub-Admin not Found.");
         }
         if (!passwordEncoder.matches(request.getPassword(), admin.getPassword())) {
@@ -95,11 +106,10 @@ public class AdminService {
         }
 
         AdminLoginRequest adminDto = new AdminLoginRequest();
-        adminDto.setAdminId(adminId);
-        adminDto.setEmail(admin.getEmail());
+        adminDto.setAdminId(admin.getAdminId());
+        adminDto.setEmail(email);
         adminDto.setAdminRole(admin.getAdminRole());
         adminDto.setUsername(admin.getUsername());
-        adminDto.setUserId(admin.getUserId());
         Object object =  authClient.adminLogin(adminDto);
         if(admin.isPending()){
             return new Response<>(false, "Admin Pending.", object);
@@ -109,14 +119,21 @@ public class AdminService {
     }
 
     public String subAdminCreate(String token, SubAdminRequest request) {
+        StringBuilder password = new StringBuilder();
+
+        for (int i = 0; i < 8; i++) {
+
+            int index = random.nextInt(CHARACTERS.length());
+
+            password.append(CHARACTERS.charAt(index));
+        }
         Admin admin = new Admin();
-        admin.setAdminId(request.getAdminId());
-        PasswordValidator.validate(request.getPassword());
-        String hashedPassword = BCrypt.hashpw(request.getPassword(), BCrypt.gensalt(12));
+        admin.setAdminId(UUID.randomUUID().toString());
+        admin.setEmail(request.getEmail());
+        PasswordValidator.validate(String.valueOf(password));
+        String hashedPassword = BCrypt.hashpw(password.toString(), BCrypt.gensalt(12));
         admin.setPassword(hashedPassword);
         admin.setAdminRole(request.getAdminRole());
-        admin.setEmail(jwtUtil.extractEmail(token));
-        admin.setUserId(jwtUtil.extractUserId(token));
         admin.setPending(true);
         adminRepository.save(admin);
         return "Sub Admin Created for Role:" + request.getAdminRole().name();

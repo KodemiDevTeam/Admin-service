@@ -8,7 +8,6 @@ import lombok.Setter;
 @Setter
 public class AdminLoginRequest {
     private String adminId;
-    private String userId;
     private String email;
     private String username;
     private AdminRole adminRole;

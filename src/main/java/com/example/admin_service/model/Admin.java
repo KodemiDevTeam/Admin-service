@@ -16,12 +16,12 @@ public class Admin {
     private String adminId;
     @DynamoDBAttribute
     private String password;
-    @DynamoDBAttribute
+    @DynamoDBIndexHashKey(
+            globalSecondaryIndexName = "email-index"
+    )
     private String email;
     @DynamoDBAttribute
     private String username;
-    @DynamoDBAttribute
-    private String userId;
     @DynamoDBTypeConvertedEnum
     @DynamoDBIndexHashKey(
             globalSecondaryIndexName = "adminRole-index"

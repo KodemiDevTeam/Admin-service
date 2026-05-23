@@ -6,6 +6,6 @@ import lombok.*;
 @Getter
 @Setter
 public class AdminLoginDTO {
-    private String adminId;
+    private String email;
     private String password;
 }
