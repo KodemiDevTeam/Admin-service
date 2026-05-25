@@ -1,62 +1,48 @@
+server:
+  port: 8551
+
 spring:
   application:
-    name: Admin-service
-
-server:
-  port: 5551
+    name: admin-service
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: fire12572@gmail.com
+    password: "pain czee sdgv wpud"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: smtp.gmail.com
 
 jwt:
   secret: k8Jd9wQ2x+4aB3d1FJtL8vZ5X0yQ1V7n2gHqM4sP1tE=
 
 eureka:
+  client:
+    service-url:
+      defaultZone: http://63.32.137.83:8761/eureka/
   instance:
     prefer-ip-address: true
 
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-
 dynamodb:
   region: eu-north-1
-  cloud:
-    aws:
-      region:
-        static: eu-north-1
-      stack:
-        auto: false
+
+cloud:
   aws:
-    s3:
-      region: eu-north-1
-      bucket-name: profile-picture-kodemi
+    region:
+      static: eu-north-1
+    stack:
+      auto: false
+
+aws:
+  s3:
+    region: eu-north-1
+    bucket-name: profile-picture-kodemi
 
 feign:
   httpclient:
     enabled: true
-
-mail:
-
-  host: smtp.gmail.com
-
-  port: 587
-
-  username: ${mail_username}
-
-  password: ${mail_password}
-
-  properties:
-
-    mail:
-
-      smtp:
-
-        auth: true
-
-        starttls:
-
-          enable: true
-
-        ssl:
-
-          trust: smtp.gmail.com

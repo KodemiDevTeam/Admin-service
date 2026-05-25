@@ -22,19 +22,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
 public class AdminService {
+    private static final String UPPER =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    private static final String CHARACTERS =
-                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-                    "abcdefghijklmnopqrstuvwxyz" +
-                    "0123456789" +
-                    "@#$%&*!";
+    private static final String LOWER =
+            "abcdefghijklmnopqrstuvwxyz";
+
+    private static final String DIGITS =
+            "0123456789";
+
+    private static final String SPECIAL =
+            "!@#$%^&*()_+-=[]{}";
+
+    private static final String ALL =
+            UPPER + LOWER + DIGITS + SPECIAL;
+
 
     private final UserClient userClient;
     private final AuthClient authClient;
@@ -121,14 +128,9 @@ public class AdminService {
     }
 
     public String subAdminCreate(String token, SubAdminRequest request) {
-        StringBuilder password = new StringBuilder();
+        String password = generatePassword();
 
-        for (int i = 0; i < 8; i++) {
 
-            int index = random.nextInt(CHARACTERS.length());
-
-            password.append(CHARACTERS.charAt(index));
-        }
         Admin admin = new Admin();
         admin.setAdminId(UUID.randomUUID().toString());
         admin.setEmail(request.getEmail());
@@ -200,5 +202,51 @@ public class AdminService {
         } catch (Exception ex) {
             throw new PaymentClientException("Error while calling payment service");
         }
+    }
+    public String generatePassword() {
+
+        StringBuilder password = new StringBuilder();
+
+        // Ensure all required character types exist
+        password.append(
+                UPPER.charAt(random.nextInt(UPPER.length()))
+        );
+
+        password.append(
+                LOWER.charAt(random.nextInt(LOWER.length()))
+        );
+
+        password.append(
+                DIGITS.charAt(random.nextInt(DIGITS.length()))
+        );
+
+        password.append(
+                SPECIAL.charAt(random.nextInt(SPECIAL.length()))
+        );
+
+        // Remaining characters
+        for (int i = 4; i < 8; i++) {
+
+            int index = random.nextInt(ALL.length());
+
+            password.append(ALL.charAt(index));
+        }
+
+        // Shuffle password characters
+        List<Character> chars = password.chars()
+                .mapToObj(c -> (char) c)
+                .toList();
+
+        List<Character> shuffled = new ArrayList<>(chars);
+
+        Collections.shuffle(shuffled);
+
+        StringBuilder finalPassword = new StringBuilder();
+
+        for (Character c : shuffled) {
+            finalPassword.append(c);
+        }
+
+        return finalPassword.toString();
     }
 }
