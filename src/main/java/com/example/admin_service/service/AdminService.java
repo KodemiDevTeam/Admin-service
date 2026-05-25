@@ -44,8 +44,9 @@ public class AdminService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private  final SecureRandom random;
+    private final EmailService emailService;
 
-    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, SecureRandom random) {
+    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, SecureRandom random, EmailService emailService) {
         this.userClient = userClient;
         this.authClient = authClient;
         this.courseClient = courseClient;
@@ -54,6 +55,7 @@ public class AdminService {
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.random = random;
+        this.emailService = emailService;
     }
     public Object getUser(String token, String id) {
         String role = authClient.geUserById(token, id).getRole().name();
@@ -95,7 +97,7 @@ public class AdminService {
 
     public Object login(@Valid AdminLoginDTO request){
         String email = request.getEmail();
-        Admin admin = adminRepository.findById(email);
+        Admin admin = adminRepository.findByEmail(email);
 
         if(admin == null){
             log.warn("Login failed – not found: {}", email);
@@ -135,6 +137,7 @@ public class AdminService {
         admin.setPassword(hashedPassword);
         admin.setAdminRole(request.getAdminRole());
         admin.setPending(true);
+        emailService.sendOEmail(request.getEmail(), request.getUsername(), password.toString());
         adminRepository.save(admin);
         return "Sub Admin Created for Role:" + request.getAdminRole().name();
     }

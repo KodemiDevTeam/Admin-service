@@ -7,6 +7,7 @@ import com.example.admin_service.model.Admin;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class AdminRepository {
@@ -26,29 +27,45 @@ public class AdminRepository {
         return dynamoDBMapper.load(Admin.class, adminId);
     }
 
-    public Admin findByRole(AdminRole adminRole){
+    public Admin findByRole(AdminRole adminRole) {
+
         Admin admin = new Admin();
+
         admin.setAdminRole(adminRole);
 
         DynamoDBQueryExpression<Admin> queryExpression =
                 new DynamoDBQueryExpression<Admin>()
                         .withIndexName("adminRole-index")
                         .withHashKeyValues(admin)
-                        .withConsistentRead(false);
-        List<Admin> results =  dynamoDBMapper.query(Admin.class, queryExpression);
-        return results.isEmpty() ? null : results.get(0);
+                        .withConsistentRead(false)
+                        .withLimit(1);
+
+        List<Admin> results =
+                dynamoDBMapper.query(Admin.class, queryExpression);
+
+        return results.isEmpty()
+                ? null
+                : results.get(0);
     }
-    public Admin findByEmail(String email){
+    public Admin findByEmail(String email) {
+
         Admin admin = new Admin();
+
         admin.setEmail(email);
 
         DynamoDBQueryExpression<Admin> queryExpression =
                 new DynamoDBQueryExpression<Admin>()
                         .withIndexName("email-index")
                         .withHashKeyValues(admin)
-                        .withConsistentRead(false);
-        List<Admin> results =  dynamoDBMapper.query(Admin.class, queryExpression);
-        return results.isEmpty() ? null : results.get(0);
+                        .withConsistentRead(false)
+                        .withLimit(1);
+
+        List<Admin> results =
+                dynamoDBMapper.query(Admin.class, queryExpression);
+
+        return results.isEmpty()
+                ? null
+                : results.get(0);
     }
 
     public void delete(String adminId) {
