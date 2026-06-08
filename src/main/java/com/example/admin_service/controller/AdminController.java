@@ -2,8 +2,8 @@ package com.example.admin_service.controller;
 
 import com.example.admin_service.component.RequiresRole;
 import com.example.admin_service.dto.request.*;
-import com.example.admin_service.dto.response.CourseResponseDTO;
 import com.example.admin_service.dto.response.TrainerResponseDTO;
+import com.example.admin_service.dto.response.TransactionHistoryResponse;
 import com.example.admin_service.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -55,22 +55,7 @@ public class AdminController {
         return ResponseEntity.ok(user);
     }
 
-    @PostMapping("/trainer/verify/{userId}")
-    @RequiresRole("USER_ADMIN")
-    public ResponseEntity<Object> approveTrainer(@RequestHeader("Authorization") String token,@PathVariable("userId") String trainerId){
-        return ResponseEntity.ok(adminService.trainerApprove(token, trainerId));
-    }
-    @PostMapping("/trainer/reject/{userId}")
-    @RequiresRole("USER_ADMIN")
-    public ResponseEntity<Object> rejectTrainer(@RequestHeader("Authorization") String token,@PathVariable("userId") String trainerId){
-        return ResponseEntity.ok(adminService.rejectApprove(token, trainerId));
-    }
 
-    @GetMapping("/pending/trainer")
-    @RequiresRole("USER_ADMIN")
-    public ResponseEntity<List<TrainerResponseDTO>> getPendingTrainer(@RequestHeader("Authorization") String token){
-        return ResponseEntity.ok(adminService.getPendingTrainers(token));
-    }
 
     @GetMapping("all/trainers")
     @RequiresRole("USER_ADMIN")
@@ -78,28 +63,14 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllTrainer(token));
     }
 
-    @PostMapping("all/course")
-    @RequiresRole("USER_ADMIN")
-    public ResponseEntity<List<CourseResponseDTO>> getAllUnVerified(@RequestHeader("Authorization") String token){
-        return ResponseEntity.ok(adminService.getAllUnVerified(token));
-    }
-    @PostMapping("/course/verify/{courseId}")
-    @RequiresRole("COURSE_ADMIN")
-    public ResponseEntity<Object> verifyCourse(@RequestHeader("Authorization") String token,
-                                               @PathVariable("courseId") String courseId){
-        return ResponseEntity.ok(adminService.verifyCourse(token, courseId));
-    }
-    @PostMapping("/course/reject/{courseId}")
-    @RequiresRole("COURSE_ADMIN")
-    public ResponseEntity<Object> rejectCourse(@RequestHeader("Authorization") String token,
-                                               @PathVariable("courseId") String courseId){
-        return ResponseEntity.ok(adminService.rejectCourse(token, courseId));
-    }
 
-    @GetMapping("/payouts/pending")
+
+
+    @GetMapping("/all/payouts")
     @RequiresRole({"SUPER_ADMIN", "PAYMENT_ADMIN"})
-    public ResponseEntity<List<PayoutRequest>> getPendingPayouts(@RequestHeader("Authorization") String token){
-        return ResponseEntity.ok(adminService.getPendingPayout());
+    public ResponseEntity<List<PayoutRequest>> getAllPayouts(@RequestHeader("Authorization") String token){
+        log.info("Getting All payouts.. ");
+        return ResponseEntity.ok(adminService.getAllPayouts(token));
     }
 
     @PostMapping("/payouts/process")
@@ -116,8 +87,81 @@ public class AdminController {
                                                              @RequestHeader("Authorization") String token) {
         return ResponseEntity.ok(adminService.processPayoutRequestByPath(token,action,payoutId,remarks));
     }
+    @GetMapping("/all/transactions")
+    @RequiresRole({"PAYMENT_ADMIN", "SUPER_ADMIN"})
+    public ResponseEntity<TransactionHistoryResponse> getTransactionHistory(){
+                TransactionHistoryResponse response = adminService.getAllTransactionHistory();
+            return ResponseEntity.ok(response);
+    }
 
+    @PostMapping("/broadcast")
+    @RequiresRole("SUPER_ADMIN")
+    public ResponseEntity<String> broadcastAnnouncement(
+            @RequestHeader("Authorization") String token,
+            @RequestBody com.example.admin_service.dto.request.AdminBroadcastRequest request) {
+        return ResponseEntity.ok(adminService.broadcastAnnouncement(token, request));
+    }
 
+    @PostMapping("/suspend/{userId}")
+    @RequiresRole("USER_ADMIN")
+    public ResponseEntity<String> suspendUser(
+            @RequestHeader("Authorization") String token,
+            @PathVariable String userId,
+            @RequestParam String reason) {
+        return ResponseEntity.ok(adminService.suspendUser(token, userId, reason));
+    }
 
+    // --- Backwards Compatibility Endpoints ---
+
+    @RequestMapping(value = "/course/review/{courseId}", method = {RequestMethod.PUT, RequestMethod.POST})
+    @RequiresRole("COURSE_ADMIN")
+    public ResponseEntity<java.util.Map<String, Object>> courseReviewCompat(
+            @RequestHeader("Authorization") String token,
+            @PathVariable String courseId,
+            @RequestBody(required = false) CourseModerationRequest request,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String remarks) {
+        
+        String finalAction = action;
+        String finalRemarks = remarks;
+        
+        if (request != null) {
+            if (finalAction == null) finalAction = request.getAction();
+            if (finalRemarks == null) finalRemarks = request.getRemarks();
+        }
+        
+        if (finalAction == null || finalAction.isBlank()) {
+            finalAction = "APPROVE";
+        }
+        
+        log.info("Legacy course review API hit: courseId={}, action={}", courseId, finalAction);
+        return ResponseEntity.ok(adminService.courseModeration(token, courseId, finalAction, finalRemarks));
+    }
+
+    @RequestMapping(value = "/trainer/review/{trainerId}", method = {RequestMethod.PUT, RequestMethod.POST})
+    @RequiresRole("USER_ADMIN")
+    public ResponseEntity<Object> trainerReviewCompat(
+            @RequestHeader("Authorization") String token,
+            @PathVariable String trainerId,
+            @RequestBody(required = false) TrainerReviewRequest request,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String remarks) {
+        
+        String finalAction = action;
+        String finalRemarks = remarks;
+        
+        if (request != null) {
+            if (finalAction == null) finalAction = request.getAction();
+            if (finalRemarks == null) finalRemarks = request.getRemarks();
+        }
+        
+        if (finalAction == null || finalAction.isBlank()) {
+            finalAction = "APPROVE";
+        }
+        
+        log.info("Legacy trainer review API hit: trainerId={}, action={}", trainerId, finalAction);
+        return ResponseEntity.ok(adminService.trainerModeration(token, trainerId, finalAction, finalRemarks));
+    }
 
 }
+

@@ -8,10 +8,10 @@ public class AdminLoginDTOTest {
     @Test
     void testGettersAndSetters() {
         AdminLoginDTO dto = new AdminLoginDTO();
-        dto.setAdminId("admin123");
+        dto.setEmail("admin@domain.com");
         dto.setPassword("pass123");
 
-        assertEquals("admin123", dto.getAdminId());
+        assertEquals("admin@domain.com", dto.getEmail());
         assertEquals("pass123", dto.getPassword());
     }
 }

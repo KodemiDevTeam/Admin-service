@@ -5,6 +5,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -42,12 +46,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND));
     }
+    
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<Map<String, Object>> handleOtpInvalidToken(InvalidTokenException ex) {
         log.warn("Invalid OTP token: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
     }
+    
     @ExceptionHandler(FetchPendingPayoutException.class)
     public ResponseEntity<Map<String, Object>> handleFetchPendingPayout(FetchPendingPayoutException ex){
         log.warn("Fetch Failed: {}", ex.getMessage());
@@ -81,5 +87,25 @@ public class GlobalExceptionHandler {
         log.warn("Invalid Payout Process: {}", ex.getMessage());
         return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
+    }
+
+    @ExceptionHandler({
+        FeignException.class,
+        CallNotPermittedException.class,
+        DownstreamServiceException.class,
+        ConnectException.class,
+        SocketTimeoutException.class
+    })
+    public ResponseEntity<Map<String, Object>> handleDownstreamServiceFailures(Exception ex) {
+        log.error("Downstream service failure: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(buildErrorResponse("Downstream service is currently unavailable. Please try again later.", HttpStatus.SERVICE_UNAVAILABLE));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleException(Exception ex) {
+        log.error("Unhandled exception: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(buildErrorResponse("An internal server error occurred. Please try again later.", HttpStatus.INTERNAL_SERVER_ERROR));
     }
 }

@@ -17,6 +17,10 @@ spring:
             enable: true
           ssl:
             trust: smtp.gmail.com
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
 
 jwt:
   secret: k8Jd9wQ2x+4aB3d1FJtL8vZ5X0yQ1V7n2gHqM4sP1tE=
@@ -24,7 +28,7 @@ jwt:
 eureka:
   client:
     service-url:
-      defaultZone: http://63.32.137.83:8761/eureka/
+      defaultZone: http://localhost:8761/eureka
   instance:
     prefer-ip-address: true
 
@@ -46,3 +50,30 @@ aws:
 feign:
   httpclient:
     enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 3000
+        readTimeout: 5000
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+    instances:
+      default:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 1s
+    instances:
+      default:
+        maxAttempts: 3
+        waitDuration: 1s

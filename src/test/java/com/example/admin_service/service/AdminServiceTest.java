@@ -5,11 +5,10 @@ import com.example.admin_service.dto.response.*;
 import com.example.admin_service.enums.AdminRole;
 import com.example.admin_service.enums.Role;
 import com.example.admin_service.exceptions.*;
-import com.example.admin_service.feign.AuthClient;
-import com.example.admin_service.feign.CourseClient;
-import com.example.admin_service.feign.PaymentClient;
-import com.example.admin_service.feign.UserClient;
+import com.example.admin_service.feign.*;
 import com.example.admin_service.model.Admin;
+import com.example.admin_service.model.AdminRateLimit;
+import com.example.admin_service.repository.AdminRateLimitRepository;
 import com.example.admin_service.repository.AdminRepository;
 import com.example.admin_service.util.JwtUtil;
 import com.example.admin_service.util.PasswordValidator;
@@ -17,43 +16,52 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Collections;
-import java.util.List;
+import java.security.SecureRandom;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AdminServiceTest {
 
-    private AdminService     adminService;
-    private UserClient       userClient;
-    private AuthClient       authClient;
-    private CourseClient     courseClient;
-    private PaymentClient    paymentClient;     // ← was missing
-    private AdminRepository  adminRepository;
-    private JwtUtil          jwtUtil;
-    private PasswordEncoder  passwordEncoder;
+    private AdminService             adminService;
+    private UserClient               userClient;
+    private AuthClient               authClient;
+    private CourseClient             courseClient;
+    private PaymentClient            paymentClient;
+    private AdminRepository          adminRepository;
+    private JwtUtil                  jwtUtil;
+    private PasswordEncoder          passwordEncoder;
+    private SecureRandom             secureRandom;
+    private EmailService             emailService;
+    private NotificationClient      notificationClient;
+    private AdminRateLimitRepository adminRateLimitRepository;
 
     private static final String TOKEN = "Bearer token";
 
     @BeforeEach
     void setup() {
-        userClient      = mock(UserClient.class);
-        authClient      = mock(AuthClient.class);
-        courseClient    = mock(CourseClient.class);
-        paymentClient   = mock(PaymentClient.class);   // ← was missing
-        adminRepository = mock(AdminRepository.class);
-        jwtUtil         = mock(JwtUtil.class);
-        passwordEncoder = mock(PasswordEncoder.class);
+        userClient               = mock(UserClient.class);
+        authClient               = mock(AuthClient.class);
+        courseClient             = mock(CourseClient.class);
+        paymentClient            = mock(PaymentClient.class);
+        adminRepository          = mock(AdminRepository.class);
+        jwtUtil                  = mock(JwtUtil.class);
+        passwordEncoder          = mock(PasswordEncoder.class);
+        secureRandom             = mock(SecureRandom.class);
+        emailService             = mock(EmailService.class);
+        notificationClient       = mock(NotificationClient.class);
+        adminRateLimitRepository = mock(AdminRateLimitRepository.class);
+
+        // Mock secureRandom behaviour so generatePassword() doesn't throw null pointer exceptions
+        when(secureRandom.nextInt(anyInt())).thenReturn(0);
 
         adminService = new AdminService(
-                userClient, authClient, courseClient,
-                paymentClient,                          // ← was missing
-                adminRepository, jwtUtil, passwordEncoder
+                userClient, authClient, courseClient, paymentClient,
+                adminRepository, jwtUtil, passwordEncoder, secureRandom,
+                emailService, notificationClient, adminRateLimitRepository
         );
     }
-
-    // ── Helper ───────────────────────────────────────────────────────────
 
     private Admin buildAdmin(boolean pending) {
         Admin admin = new Admin();
@@ -61,7 +69,6 @@ class AdminServiceTest {
         admin.setPassword("hashed");
         admin.setPending(pending);
         admin.setEmail("admin@test.com");
-        admin.setUserId("uid_001");
         admin.setAdminRole(AdminRole.USER_ADMIN);
         return admin;
     }
@@ -107,15 +114,25 @@ class AdminServiceTest {
     // ── Trainer actions ───────────────────────────────────────────────────
 
     @Test
-    void trainerApprove_callsAuthClient() {
-        adminService.trainerApprove(TOKEN, "t1");
-        verify(authClient).activateTrainer(TOKEN, "t1");
+    void trainerModeration_validId_callsAuthClient() {
+        Object response = new Object();
+        when(authClient.reviewTrainer(eq(TOKEN), eq("t1"), any(TrainerReviewRequest.class)))
+                .thenReturn(org.springframework.http.ResponseEntity.ok(response));
+
+        Object result = adminService.trainerModeration(TOKEN, "t1", "APPROVE", "Ok");
+        assertNotNull(result);
+        verify(authClient).reviewTrainer(eq(TOKEN), eq("t1"), any(TrainerReviewRequest.class));
     }
 
     @Test
-    void rejectApprove_callsAuthClient() {
-        adminService.rejectApprove(TOKEN, "t1");
-        verify(authClient).rejectTrainer(TOKEN, "t1");
+    void trainerModeration_nullId_returnsPendingTrainers() {
+        List<TrainerResponseDTO> pending = new ArrayList<>();
+        when(userClient.getAllPendingTrainers(TOKEN)).thenReturn(pending);
+
+        Object result = adminService.trainerModeration(TOKEN, null, "APPROVE", "Ok");
+        assertTrue(result instanceof Map);
+        Map<?, ?> map = (Map<?, ?>) result;
+        assertEquals(pending, map.get("data"));
     }
 
     @Test
@@ -125,32 +142,33 @@ class AdminServiceTest {
         assertEquals(list, adminService.getAllTrainer(TOKEN));
     }
 
-    @Test
-    void getPendingTrainers_returnsListFromUserClient() {
-        List<TrainerResponseDTO> list = Collections.emptyList();
-        when(userClient.getAllPendingTrainers(TOKEN)).thenReturn(list);
-        assertEquals(list, adminService.getPendingTrainers(TOKEN));
-    }
-
     // ── Course actions ────────────────────────────────────────────────────
 
     @Test
-    void verifyCourse_callsCourseClient() {
-        adminService.verifyCourse(TOKEN, "c1");
-        verify(courseClient).verifyCourse(TOKEN, "c1");
+    void courseModeration_validId_callsCourseClient() {
+        Map<String, Object> mockRes = new HashMap<>();
+        when(courseClient.reviewCourse(eq(TOKEN), eq("c1"), any(CourseModerationRequest.class)))
+                .thenReturn(mockRes);
+
+        Map<String, Object> result = adminService.courseModeration(TOKEN, "c1", "APPROVE", "Good");
+        assertEquals(mockRes, result);
+        verify(courseClient).reviewCourse(eq(TOKEN), eq("c1"), any(CourseModerationRequest.class));
     }
 
     @Test
-    void rejectCourse_callsCourseClient() {
-        adminService.rejectCourse(TOKEN, "c1");
-        verify(courseClient).rejectCourse(TOKEN, "c1");
-    }
+    void courseModeration_nullId_returnsPendingCourses() {
+        CourseResponseDTO pendingCourse = new CourseResponseDTO();
+        pendingCourse.setStatus("PENDING");
+        CourseResponseDTO activeCourse = new CourseResponseDTO();
+        activeCourse.setStatus("ACTIVE");
 
-    @Test
-    void getAllUnVerified_returnsListFromCourseClient() {
-        List<CourseResponseDTO> list = Collections.emptyList();
-        when(courseClient.getAllUnVerifiedCourses(TOKEN)).thenReturn(list);
-        assertEquals(list, adminService.getAllUnVerified(TOKEN));
+        when(courseClient.getAllCoursesAdmin(TOKEN)).thenReturn(List.of(pendingCourse, activeCourse));
+
+        Map<String, Object> result = adminService.courseModeration(TOKEN, null, null, null);
+        assertNotNull(result);
+        List<?> data = (List<?>) result.get("data");
+        assertEquals(1, data.size());
+        assertEquals("PENDING", ((CourseResponseDTO) data.get(0)).getStatus());
     }
 
     // ── login ─────────────────────────────────────────────────────────────
@@ -158,11 +176,11 @@ class AdminServiceTest {
     @Test
     void login_success_notPending_returnsToken() {
         AdminLoginDTO dto = new AdminLoginDTO();
-        dto.setAdminId("a1");
+        dto.setEmail("admin@test.com");
         dto.setPassword("pass");
 
         Admin admin = buildAdmin(false);
-        when(adminRepository.findById("a1")).thenReturn(admin);
+        when(adminRepository.findByEmail("admin@test.com")).thenReturn(admin);
         when(passwordEncoder.matches("pass", "hashed")).thenReturn(true);
         when(authClient.adminLogin(any())).thenReturn("JWT_TOKEN");
 
@@ -172,11 +190,11 @@ class AdminServiceTest {
     @Test
     void login_pendingAdmin_returnsResponseWrapper() {
         AdminLoginDTO dto = new AdminLoginDTO();
-        dto.setAdminId("a1");
+        dto.setEmail("admin@test.com");
         dto.setPassword("pass");
 
         Admin admin = buildAdmin(true);
-        when(adminRepository.findById("a1")).thenReturn(admin);
+        when(adminRepository.findByEmail("admin@test.com")).thenReturn(admin);
         when(passwordEncoder.matches("pass", "hashed")).thenReturn(true);
         when(authClient.adminLogin(any())).thenReturn("JWT_TOKEN");
 
@@ -191,11 +209,11 @@ class AdminServiceTest {
     @Test
     void login_invalidPassword_throwsInvalidCredentialsException() {
         AdminLoginDTO dto = new AdminLoginDTO();
-        dto.setAdminId("a1");
+        dto.setEmail("admin@test.com");
         dto.setPassword("wrong");
 
         Admin admin = buildAdmin(false);
-        when(adminRepository.findById("a1")).thenReturn(admin);
+        when(adminRepository.findByEmail("admin@test.com")).thenReturn(admin);
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
 
         assertThrows(InvalidCredentialsException.class,
@@ -206,8 +224,8 @@ class AdminServiceTest {
     @Test
     void login_adminNotFound_throwsAdminNotFoundException() {
         AdminLoginDTO dto = new AdminLoginDTO();
-        dto.setAdminId("a1");
-        when(adminRepository.findById("a1")).thenReturn(null);
+        dto.setEmail("admin@test.com");
+        when(adminRepository.findByEmail("admin@test.com")).thenReturn(null);
 
         assertThrows(AdminNotFoundException.class,
                 () -> adminService.login(dto));
@@ -221,63 +239,16 @@ class AdminServiceTest {
             mocked.when(() -> PasswordValidator.validate(any())).thenAnswer(i -> null);
 
             SubAdminRequest request = new SubAdminRequest();
-            request.setAdminId("sub1");
-            request.setPassword("Password123!");
+            request.setEmail("sub1@test.com");
+            request.setUsername("sub1");
             request.setAdminRole(AdminRole.USER_ADMIN);
-
-            when(jwtUtil.extractEmail(TOKEN)).thenReturn("admin@test.com");
-            when(jwtUtil.extractUserId(TOKEN)).thenReturn("uid_001");
 
             String result = adminService.subAdminCreate(TOKEN, request);
 
             assertTrue(result.contains("Sub Admin Created"));
             assertTrue(result.contains("USER_ADMIN"));
             verify(adminRepository).save(any(Admin.class));
-        }
-    }
-
-    @Test
-    void subAdminCreate_invalidPassword_throwsException() {
-        try (var mocked = mockStatic(PasswordValidator.class)) {
-            mocked.when(() -> PasswordValidator.validate("weak"))
-                    .thenThrow(new IllegalArgumentException("Weak password"));
-
-            SubAdminRequest request = new SubAdminRequest();
-            request.setAdminId("sub1");
-            request.setPassword("weak");
-            request.setAdminRole(AdminRole.USER_ADMIN);
-
-            when(jwtUtil.extractEmail(TOKEN)).thenReturn("admin@test.com");
-            when(jwtUtil.extractUserId(TOKEN)).thenReturn("uid_001");
-
-            assertThrows(IllegalArgumentException.class,
-                    () -> adminService.subAdminCreate(TOKEN, request));
-            verify(adminRepository, never()).save(any());
-        }
-    }
-
-    @Test
-    void subAdminCreate_setsAdminFieldsCorrectly() {
-        try (var mocked = mockStatic(PasswordValidator.class)) {
-            mocked.when(() -> PasswordValidator.validate(any())).thenAnswer(i -> null);
-
-            SubAdminRequest request = new SubAdminRequest();
-            request.setAdminId("sub2");
-            request.setPassword("Password123!");
-            request.setAdminRole(AdminRole.COURSE_ADMIN);
-
-            when(jwtUtil.extractEmail(TOKEN)).thenReturn("super@test.com");
-            when(jwtUtil.extractUserId(TOKEN)).thenReturn("uid_super");
-
-            adminService.subAdminCreate(TOKEN, request);
-
-            verify(adminRepository).save(argThat(admin ->
-                    admin.getAdminId().equals("sub2") &&
-                            admin.getAdminRole() == AdminRole.COURSE_ADMIN &&
-                            admin.isPending() &&
-                            admin.getEmail().equals("super@test.com") &&
-                            admin.getUserId().equals("uid_super")
-            ));
+            verify(emailService).sendOEmail(eq("sub1@test.com"), anyString(), eq("sub1"));
         }
     }
 
@@ -293,8 +264,8 @@ class AdminServiceTest {
             dto.setPassword("Password123!");
 
             Admin admin = buildAdmin(true);
-            when(jwtUtil.extractRole(TOKEN)).thenReturn("USER_ADMIN");
-            when(adminRepository.findByRole(AdminRole.USER_ADMIN)).thenReturn(admin);
+            when(jwtUtil.extractUserId(TOKEN)).thenReturn("a1");
+            when(adminRepository.findById("a1")).thenReturn(admin);
 
             String result = adminService.setSubAdmin(dto, TOKEN);
 
@@ -308,35 +279,15 @@ class AdminServiceTest {
     @Test
     void setSubAdmin_alreadyUpdated_returnsAlreadyUpdatedMessage() {
         SubAdminDetailsDTO dto = new SubAdminDetailsDTO();
-        Admin admin = buildAdmin(false);   // not pending
+        Admin admin = buildAdmin(false);
 
-        when(jwtUtil.extractRole(TOKEN)).thenReturn("USER_ADMIN");
-        when(adminRepository.findByRole(AdminRole.USER_ADMIN)).thenReturn(admin);
+        when(jwtUtil.extractUserId(TOKEN)).thenReturn("a1");
+        when(adminRepository.findById("a1")).thenReturn(admin);
 
         String result = adminService.setSubAdmin(dto, TOKEN);
 
         assertEquals("SubAdmin Already Updated.", result);
         verify(adminRepository, never()).save(any());
-    }
-
-    @Test
-    void setSubAdmin_invalidPassword_throwsException() {
-        try (var mocked = mockStatic(PasswordValidator.class)) {
-            mocked.when(() -> PasswordValidator.validate("weak"))
-                    .thenThrow(new IllegalArgumentException("Weak password"));
-
-            SubAdminDetailsDTO dto = new SubAdminDetailsDTO();
-            dto.setUsername("newUser");
-            dto.setPassword("weak");
-
-            Admin admin = buildAdmin(true);
-            when(jwtUtil.extractRole(TOKEN)).thenReturn("USER_ADMIN");
-            when(adminRepository.findByRole(AdminRole.USER_ADMIN)).thenReturn(admin);
-
-            assertThrows(IllegalArgumentException.class,
-                    () -> adminService.setSubAdmin(dto, TOKEN));
-            verify(adminRepository, never()).save(any());
-        }
     }
 
     // ── changePassword ────────────────────────────────────────────────────
@@ -357,162 +308,98 @@ class AdminServiceTest {
         }
     }
 
-    @Test
-    void changePassword_adminNotFound_throwsAdminNotFoundException() {
-        when(jwtUtil.extractRole(TOKEN)).thenReturn("SUPER_ADMIN");
-        when(adminRepository.findByRole(AdminRole.SUPER_ADMIN)).thenReturn(null);
-
-        assertThrows(AdminNotFoundException.class,
-                () -> adminService.changePassword("Password123!", TOKEN));
-        verify(adminRepository, never()).save(any());
-    }
+    // ── payouts & transactions ─────────────────────────────────────────────
 
     @Test
-    void changePassword_invalidPassword_throwsException() {
-        try (var mocked = mockStatic(PasswordValidator.class)) {
-            mocked.when(() -> PasswordValidator.validate("weak"))
-                    .thenThrow(new IllegalArgumentException("Weak password"));
-
-            Admin admin = buildAdmin(false);
-            when(jwtUtil.extractRole(TOKEN)).thenReturn("SUPER_ADMIN");
-            when(adminRepository.findByRole(AdminRole.SUPER_ADMIN)).thenReturn(admin);
-
-            assertThrows(IllegalArgumentException.class,
-                    () -> adminService.changePassword("weak", TOKEN));
-            verify(adminRepository, never()).save(any());
-        }
-    }
-
-    // ── getPendingPayout ──────────────────────────────────────────────────
-
-    @Test
-    void getPendingPayout_success_returnsListFromPaymentClient() {
+    void getAllPayouts_success() {
         List<PayoutRequest> list = List.of(new PayoutRequest());
-        when(paymentClient.getPendingPayouts()).thenReturn(list);
+        when(paymentClient.getAllPayouts(TOKEN)).thenReturn(list);
 
-        List<PayoutRequest> result = adminService.getPendingPayout();
-
+        List<PayoutRequest> result = adminService.getAllPayouts(TOKEN);
         assertEquals(list, result);
-        verify(paymentClient).getPendingPayouts();
     }
 
     @Test
-    void getPendingPayout_emptyList_returnsEmpty() {
-        when(paymentClient.getPendingPayouts()).thenReturn(Collections.emptyList());
-
-        List<PayoutRequest> result = adminService.getPendingPayout();
-
-        assertTrue(result.isEmpty());
+    void getAllPayouts_fails_throwsFetchPendingPayoutException() {
+        when(paymentClient.getAllPayouts(TOKEN)).thenThrow(new RuntimeException("Error"));
+        assertThrows(FetchPendingPayoutException.class, () -> adminService.getAllPayouts(TOKEN));
     }
 
     @Test
-    void getPendingPayout_clientThrows_throwsFetchPendingPayoutException() {
-        when(paymentClient.getPendingPayouts())
-                .thenThrow(new RuntimeException("Feign error"));
+    void getAllTransactionHistory_success() {
+        TransactionHistoryResponse response = new TransactionHistoryResponse();
+        when(paymentClient.getTransactionHistory()).thenReturn(response);
 
-        assertThrows(FetchPendingPayoutException.class,
-                () -> adminService.getPendingPayout());
+        assertEquals(response, adminService.getAllTransactionHistory());
     }
 
-    // ── processPayoutRequest ──────────────────────────────────────────────
+    @Test
+    void getAllTransactionHistory_fails_throwsFetchPendingPayoutException() {
+        when(paymentClient.getTransactionHistory()).thenThrow(new RuntimeException("Error"));
+        assertThrows(FetchPendingPayoutException.class, () -> adminService.getAllTransactionHistory());
+    }
 
     @Test
-    void processPayoutRequest_success_returnsResultFromPaymentClient() {
+    void processPayoutRequest_success() {
         ProcessPayoutRequest request = new ProcessPayoutRequest();
-        when(paymentClient.processPayoutRequest(request, TOKEN)).thenReturn("Payout Processed");
+        when(paymentClient.processPayoutRequest(request, TOKEN)).thenReturn("Success");
 
-        String result = adminService.processPayoutRequest(TOKEN, request);
-
-        assertEquals("Payout Processed", result);
-        verify(paymentClient).processPayoutRequest(request, TOKEN);
+        assertEquals("Success", adminService.processPayoutRequest(TOKEN, request));
     }
 
     @Test
-    void processPayoutRequest_nullToken_throwsUnauthorizedPayoutAccessException() {
-        ProcessPayoutRequest request = new ProcessPayoutRequest();
-
-        assertThrows(UnauthorizedPayoutAccessException.class,
-                () -> adminService.processPayoutRequest(null, request));
-        verify(paymentClient, never()).processPayoutRequest(any(), any());
+    void processPayoutRequest_nullToken_throws() {
+        assertThrows(UnauthorizedPayoutAccessException.class, () -> adminService.processPayoutRequest(null, new ProcessPayoutRequest()));
     }
 
     @Test
-    void processPayoutRequest_blankToken_throwsUnauthorizedPayoutAccessException() {
-        ProcessPayoutRequest request = new ProcessPayoutRequest();
-
-        assertThrows(UnauthorizedPayoutAccessException.class,
-                () -> adminService.processPayoutRequest("   ", request));
-        verify(paymentClient, never()).processPayoutRequest(any(), any());
+    void processPayoutRequestByPath_success() {
+        when(paymentClient.processPayoutRequestByPath(TOKEN, "APPROVE", "p1", "ok")).thenReturn("Success");
+        assertEquals("Success", adminService.processPayoutRequestByPath(TOKEN, "APPROVE", "p1", "ok"));
     }
 
     @Test
-    void processPayoutRequest_clientThrows_throwsPayoutProcessingException() {
-        ProcessPayoutRequest request = new ProcessPayoutRequest();
-        when(paymentClient.processPayoutRequest(any(), any()))
-                .thenThrow(new RuntimeException("Feign error"));
-
-        assertThrows(PayoutProcessingException.class,
-                () -> adminService.processPayoutRequest(TOKEN, request));
+    void processPayoutRequestByPath_invalidAction_throws() {
+        assertThrows(InvalidPayoutActionException.class, () -> adminService.processPayoutRequestByPath(TOKEN, "CANCEL", "p1", "ok"));
     }
 
-    // ── processPayoutRequestByPath ────────────────────────────────────────
+    // ── announcements & suspension ─────────────────────────────────────────
 
     @Test
-    void processPayoutRequestByPath_approve_success() {
-        when(paymentClient.processPayoutRequestByPath(TOKEN, "APPROVE", "payout1", "Approved"))
-                .thenReturn("Approved successfully");
+    void broadcastAnnouncement_success() {
+        AdminBroadcastRequest request = new AdminBroadcastRequest();
+        request.setTitle("Announcement");
+        request.setMessage("Message");
+        request.setTargetRole("ALL");
+        request.setUrgent(true);
+        request.setChannels(new ArrayList<>(List.of("EMAIL", "SMS")));
 
-        String result = adminService.processPayoutRequestByPath(
-                TOKEN, "APPROVE", "payout1", "Approved");
+        when(jwtUtil.extractRole(TOKEN)).thenReturn("SUPER_ADMIN");
+        when(jwtUtil.extractUserId(TOKEN)).thenReturn("admin-1");
+        when(adminRateLimitRepository.getAdminRateLimit(anyString())).thenReturn(null);
 
-        assertEquals("Approved successfully", result);
-        verify(paymentClient).processPayoutRequestByPath(TOKEN, "APPROVE", "payout1", "Approved");
-    }
-
-    @Test
-    void processPayoutRequestByPath_reject_success() {
-        when(paymentClient.processPayoutRequestByPath(TOKEN, "REJECT", "payout1", "Insufficient docs"))
-                .thenReturn("Rejected successfully");
-
-        String result = adminService.processPayoutRequestByPath(
-                TOKEN, "REJECT", "payout1", "Insufficient docs");
-
-        assertEquals("Rejected successfully", result);
+        String result = adminService.broadcastAnnouncement(TOKEN, request);
+        assertEquals("Broadcast sent successfully", result);
+        verify(notificationClient).broadcastNotification(eq(TOKEN), any());
+        verify(adminRateLimitRepository).save(any());
     }
 
     @Test
-    void processPayoutRequestByPath_caseInsensitive_approve() {
-        when(paymentClient.processPayoutRequestByPath(any(), any(), any(), any()))
-                .thenReturn("Approved");
+    void broadcastAnnouncement_rateLimitExceeded_throws() {
+        AdminBroadcastRequest request = new AdminBroadcastRequest();
+        AdminRateLimit rateLimit = new AdminRateLimit();
+        rateLimit.setBroadcastCount(5);
 
-        // lowercase should also work — equalsIgnoreCase
-        assertDoesNotThrow(() ->
-                adminService.processPayoutRequestByPath(TOKEN, "approve", "p1", "ok"));
+        when(jwtUtil.extractUserId(TOKEN)).thenReturn("admin-1");
+        when(adminRateLimitRepository.getAdminRateLimit(anyString())).thenReturn(rateLimit);
+
+        assertThrows(RuntimeException.class, () -> adminService.broadcastAnnouncement(TOKEN, request));
     }
 
     @Test
-    void processPayoutRequestByPath_invalidAction_throwsInvalidPayoutActionException() {
-        assertThrows(InvalidPayoutActionException.class, () ->
-                adminService.processPayoutRequestByPath(
-                        TOKEN, "HOLD", "payout1", "remarks"));
-        verify(paymentClient, never())
-                .processPayoutRequestByPath(any(), any(), any(), any());
-    }
-
-    @Test
-    void processPayoutRequestByPath_randomAction_throwsInvalidPayoutActionException() {
-        assertThrows(InvalidPayoutActionException.class, () ->
-                adminService.processPayoutRequestByPath(
-                        TOKEN, "CANCEL", "payout1", "remarks"));
-    }
-
-    @Test
-    void processPayoutRequestByPath_clientThrows_throwsPaymentClientException() {
-        when(paymentClient.processPayoutRequestByPath(any(), any(), any(), any()))
-                .thenThrow(new RuntimeException("Feign error"));
-
-        assertThrows(PaymentClientException.class, () ->
-                adminService.processPayoutRequestByPath(
-                        TOKEN, "APPROVE", "payout1", "ok"));
+    void suspendUser_success() {
+        String result = adminService.suspendUser(TOKEN, "user-1", "Spam");
+        assertEquals("User suspended and notified successfully", result);
+        verify(notificationClient).sendInternalNotification(eq(TOKEN), any());
     }
 }

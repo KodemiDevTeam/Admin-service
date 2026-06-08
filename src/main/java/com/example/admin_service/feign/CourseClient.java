@@ -1,22 +1,22 @@
 package com.example.admin_service.feign;
 
-import com.example.admin_service.dto.response.CourseResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import io.github.resilience4j.retry.annotation.Retry;
 import java.util.List;
+import java.util.Map;
 
-@FeignClient(name = "course-service")
+@FeignClient(name = "course-service", fallbackFactory = com.example.admin_service.feign.fallback.CourseClientFallbackFactory.class)
+@Retry(name = "default")
 public interface CourseClient {
-	
-    @GetMapping("/api/v1/course/all/unverified")
-    List<CourseResponseDTO> getAllUnVerifiedCourses(@RequestHeader("Authorization") String token);
-    
-    @PostMapping("/api/v1/course/internal/reject/{courseId}")
-    ResponseEntity<Object> rejectCourse(@RequestHeader("Authorization") String token, @PathVariable("courseId") String courseId);
 
-    @PostMapping("/api/v1/course/internal/activate/{courseId}")
-    ResponseEntity<Object> verifyCourse(@RequestHeader("Authorization") String token, @PathVariable("courseId") String courseId);
+    @PutMapping("/api/v1/course/review/{courseId}")
+    Map<String, Object> reviewCourse(
+            @RequestHeader("Authorization") String token,
+            @PathVariable("courseId") String courseId,
+            @RequestBody com.example.admin_service.dto.request.CourseModerationRequest request);
 
-    }
+    @GetMapping("/api/v1/course/admin/get-all-courses")
+    List<com.example.admin_service.dto.response.CourseResponseDTO> getAllCoursesAdmin(
+            @RequestHeader("Authorization") String token);
+}

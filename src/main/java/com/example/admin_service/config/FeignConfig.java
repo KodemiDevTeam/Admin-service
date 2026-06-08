@@ -12,16 +12,19 @@ public class FeignConfig {
 
     @Bean
     public RequestInterceptor requestInterceptor() {
-        return requestTemplate -> {
-            ServletRequestAttributes attributes =
-                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        return new RequestInterceptor() {
+            @Override
+            public void apply(feign.RequestTemplate requestTemplate) {
+                ServletRequestAttributes attributes =
+                        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 
-            if (attributes != null) {
-                HttpServletRequest request = attributes.getRequest();
-                String authHeader = request.getHeader("Authorization");
+                if (attributes != null) {
+                    HttpServletRequest request = attributes.getRequest();
+                    String authHeader = request.getHeader("Authorization");
 
-                if (authHeader != null) {
-                    requestTemplate.header("Authorization", authHeader);
+                    if (authHeader != null) {
+                        requestTemplate.header("Authorization", authHeader);
+                    }
                 }
             }
         };

@@ -7,18 +7,22 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.github.resilience4j.retry.annotation.Retry;
 
-
-@FeignClient(name = "auth-service")
+@FeignClient(name = "auth-service", fallbackFactory = com.example.admin_service.feign.fallback.AuthClientFallbackFactory.class)
+@Retry(name = "default")
 public interface AuthClient {
 	
-    @PostMapping("api/v1/auth/internal/trainer/activate/{userId}")
-    ResponseEntity<Object> activateTrainer(@RequestHeader("Authorization") String token, @PathVariable String userId);
-    @PostMapping("/internal/trainer/reject/{userId}")
-    ResponseEntity<Object> rejectTrainer(@RequestHeader("Authorization") String token,@PathVariable String userId);
+    @PutMapping("api/v1/auth/internal/trainer/review/{userId}")
+    ResponseEntity<Object> reviewTrainer(
+            @RequestHeader("Authorization") String token, 
+            @PathVariable("userId") String userId, 
+            @RequestBody com.example.admin_service.dto.request.TrainerReviewRequest request);
+
     @GetMapping("api/v1/auth/status")
     ResponseEntity<Object> checkStatus(
             @RequestParam @Email @NotBlank String email);
+            
     @PostMapping("api/v1/auth/admin/login")
     Object adminLogin(@RequestBody AdminLoginRequest adminResponseDTO);
 

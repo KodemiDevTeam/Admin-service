@@ -1,16 +1,20 @@
 package com.example.admin_service.dto.request;
 
+import com.example.admin_service.enums.AdminRole;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SubAdminRequestTest {
 
     @Test
-    void testGetters() {
+    void testGettersAndSetters() {
         SubAdminRequest dto = new SubAdminRequest();
-        // Since there is only @Getter, the fields will be initialized to null
-        assertNull(dto.getAdminId());
-        assertNull(dto.getPassword());
-        assertNull(dto.getAdminRole());
+        dto.setEmail("sub@domain.com");
+        dto.setUsername("subUser");
+        dto.setAdminRole(AdminRole.COURSE_ADMIN);
+
+        assertEquals("sub@domain.com", dto.getEmail());
+        assertEquals("subUser", dto.getUsername());
+        assertEquals(AdminRole.COURSE_ADMIN, dto.getAdminRole());
     }
 }
