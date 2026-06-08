@@ -7,8 +7,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: fire12572@gmail.com
-    password: "pain czee sdgv wpud"
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -23,7 +23,7 @@ spring:
         enabled: true
 
 jwt:
-  secret: k8Jd9wQ2x+4aB3d1FJtL8vZ5X0yQ1V7n2gHqM4sP1tE=
+  secret: ${JWT_SECRET:}
 
 eureka:
   client:
