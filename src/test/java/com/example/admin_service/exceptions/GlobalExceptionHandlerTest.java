@@ -1,17 +1,22 @@
 package com.example.admin_service.exceptions;
 
 import feign.FeignException;
+import feign.Request;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,6 +26,9 @@ class GlobalExceptionHandlerTest {
 
     @InjectMocks
     private GlobalExceptionHandler globalExceptionHandler;
+
+    @Mock
+    private Request mockRequest;
 
     @BeforeEach
     void setUp() {
@@ -121,7 +129,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void testHandleDownstreamServiceFailuresFeignException() {
-        FeignException ex = new FeignException.InternalServerError("Server error", null, null);
+        FeignException ex = new FeignException.InternalServerError("Server error", mockRequest, (byte[]) null, Collections.emptyMap());
         ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleDownstreamServiceFailures(ex);
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
