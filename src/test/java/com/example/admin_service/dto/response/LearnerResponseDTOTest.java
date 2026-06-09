@@ -5,12 +5,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class LearnerResponseDTOTest {
+class LearnerResponseDTOTest {
 
     @Test
     void testLearnerResponseDTO() {
-        LocalDate dob = LocalDate.of(1990, 1, 1);
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate dob = LocalDate.of(1990, java.time.Month.JANUARY, 1);
+        LocalDateTime now = LocalDateTime.of(2026, java.time.Month.JUNE, 9, 12, 0);
 
         LearnerResponseDTO dto = LearnerResponseDTO.builder()
                 .username("learner1")

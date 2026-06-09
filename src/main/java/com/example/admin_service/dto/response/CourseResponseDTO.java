@@ -7,7 +7,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -47,8 +47,8 @@ public class CourseResponseDTO {
     private String instructorTitle;
     private String instructorBio;
     private String courseType;
-    private Date createdAt;
-    private Date updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
     private List<ReviewResponseDTO> reviews;
     private List<LessonResponseDTO> lessons;
 

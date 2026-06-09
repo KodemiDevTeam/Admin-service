@@ -48,7 +48,7 @@ public class RoleCheckAspect {
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
         }
-        String role = jwtUtil.extractRole(token);;
+        String role = jwtUtil.extractRole(token);
         if (role == null) {
             throw new NullPointerException("Value Not Found.");
         }

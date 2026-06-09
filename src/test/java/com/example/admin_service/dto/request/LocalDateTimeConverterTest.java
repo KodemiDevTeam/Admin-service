@@ -18,7 +18,7 @@ class LocalDateTimeConverterTest {
 
     @Test
     void testConvert_ValidLocalDateTime() {
-        LocalDateTime dateTime = LocalDateTime.of(2024, 3, 15, 14, 30, 45);
+        LocalDateTime dateTime = LocalDateTime.of(2024, java.time.Month.MARCH, 15, 14, 30, 45);
         String result = converter.convert(dateTime);
         
         assertEquals("2024-03-15T14:30:45", result);
@@ -35,7 +35,7 @@ class LocalDateTimeConverterTest {
         String dateTimeString = "2024-03-15T14:30:45";
         LocalDateTime result = converter.unconvert(dateTimeString);
         
-        assertEquals(LocalDateTime.of(2024, 3, 15, 14, 30, 45), result);
+        assertEquals(LocalDateTime.of(2024, java.time.Month.MARCH, 15, 14, 30, 45), result);
     }
 
     @Test
@@ -46,7 +46,7 @@ class LocalDateTimeConverterTest {
 
     @Test
     void testRoundTrip() {
-        LocalDateTime original = LocalDateTime.of(2023, 12, 25, 10, 15, 30);
+        LocalDateTime original = LocalDateTime.of(2023, java.time.Month.DECEMBER, 25, 10, 15, 30);
         String converted = converter.convert(original);
         LocalDateTime unconverted = converter.unconvert(converted);
         
@@ -55,7 +55,7 @@ class LocalDateTimeConverterTest {
 
     @Test
     void testConvert_WithNanoseconds() {
-        LocalDateTime dateTime = LocalDateTime.of(2024, 3, 15, 14, 30, 45, 123456789);
+        LocalDateTime dateTime = LocalDateTime.of(2024, java.time.Month.MARCH, 15, 14, 30, 45, 123456789);
         String result = converter.convert(dateTime);
         
         assertTrue(result.startsWith("2024-03-15T14:30:45"));
@@ -63,7 +63,7 @@ class LocalDateTimeConverterTest {
 
     @Test
     void testConvert_Midnight() {
-        LocalDateTime midnight = LocalDateTime.of(2024, 1, 1, 0, 0, 0);
+        LocalDateTime midnight = LocalDateTime.of(2024, java.time.Month.JANUARY, 1, 0, 0, 0);
         String result = converter.convert(midnight);
         
         assertEquals("2024-01-01T00:00", result);
@@ -71,7 +71,7 @@ class LocalDateTimeConverterTest {
 
     @Test
     void testConvert_EndOfDay() {
-        LocalDateTime endOfDay = LocalDateTime.of(2024, 12, 31, 23, 59, 59);
+        LocalDateTime endOfDay = LocalDateTime.of(2024, java.time.Month.DECEMBER, 31, 23, 59, 59);
         String result = converter.convert(endOfDay);
         
         assertEquals("2024-12-31T23:59:59", result);

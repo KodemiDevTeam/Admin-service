@@ -21,6 +21,6 @@ class InvalidTokenExceptionTest {
 
         assertEquals("Token expired", ex.getMessage());
         // Although we pass cause, it is not stored in super constructor. Let's verify:
-        assertNull(ex.getCause(), "Cause is not passed to RuntimeException in current constructor");
+        assertSame(cause, ex.getCause(), "Cause is passed to RuntimeException");
     }
 }

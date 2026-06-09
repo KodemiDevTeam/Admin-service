@@ -1,15 +1,13 @@
 package com.example.admin_service.dto.response;
 
 import org.junit.jupiter.api.Test;
-import java.util.Date;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class CourseResponseDTOTest {
+class CourseResponseDTOTest {
 
     @Test
     void testGettersSettersAndBuilder() {
-        Date now = new Date();
         LessonResponseDTO lesson = new LessonResponseDTO();
         lesson.setVideoKey("videos/lesson.mp4");
 
@@ -28,19 +26,6 @@ public class CourseResponseDTOTest {
                 .thumbnailUrl("https://thumb.url")
                 .demoVideoUrl("https://video.url")
                 .price(99.99)
-                .lessonCount(10)
-                .durationLabel("5 hours")
-                .averageRating(4.8)
-                .totalReviews(20)
-                .welcomeMessage("Welcome!")
-                .instructorName("Instructor")
-                .instructorPhoto("photo")
-                .instructorTitle("Title")
-                .instructorBio("Bio")
-                .courseType("Free")
-                .createdAt(now)
-                .updatedAt(now)
-                .lessons(List.of(lesson))
                 .build();
 
         assertEquals("c1", dto.getCourseId());
@@ -57,6 +42,30 @@ public class CourseResponseDTOTest {
         assertEquals("https://thumb.url", dto.getThumbnailUrl());
         assertEquals("https://video.url", dto.getDemoVideoUrl());
         assertEquals(99.99, dto.getPrice());
+    }
+
+    @Test
+    void testRemainingFieldsAndMasking() {
+        java.time.Instant now = java.time.Instant.parse("2026-06-09T12:00:00Z");
+        LessonResponseDTO lesson = new LessonResponseDTO();
+        lesson.setVideoKey("videos/lesson.mp4");
+
+        CourseResponseDTO dto = CourseResponseDTO.builder()
+                .lessonCount(10)
+                .durationLabel("5 hours")
+                .averageRating(4.8)
+                .totalReviews(20)
+                .welcomeMessage("Welcome!")
+                .instructorName("Instructor")
+                .instructorPhoto("photo")
+                .instructorTitle("Title")
+                .instructorBio("Bio")
+                .courseType("Free")
+                .createdAt(now)
+                .updatedAt(now)
+                .lessons(List.of(lesson))
+                .build();
+
         assertEquals(10, dto.getLessonCount());
         assertEquals("5 hours", dto.getDurationLabel());
         assertEquals(4.8, dto.getAverageRating());

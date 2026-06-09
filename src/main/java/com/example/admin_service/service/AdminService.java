@@ -48,6 +48,7 @@ public class AdminService {
     private static final String ALL =
             UPPER + LOWER + DIGITS + SPECIAL;
 
+    private static final String IN_APP_CHANNEL = "IN_APP";
 
     private final UserClient userClient;
     private final AuthClient authClient;
@@ -170,20 +171,20 @@ public class AdminService {
         }
     }
 
-    public String subAdminCreate(String token, SubAdminRequest request) {
+    public String subAdminCreate(SubAdminRequest request) {
         String password = generatePassword();
 
 
         Admin admin = new Admin();
         admin.setAdminId(UUID.randomUUID().toString());
         admin.setEmail(request.getEmail());
-        PasswordValidator.validate(String.valueOf(password));
-        String hashedPassword = BCrypt.hashpw(password.toString(), BCrypt.gensalt(12));
+        PasswordValidator.validate(password);
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
         admin.setPassword(hashedPassword);
         admin.setUsername(request.getUsername());
         admin.setAdminRole(request.getAdminRole());
         admin.setPending(true);
-        emailService.sendOEmail(request.getEmail(),password.toString(), request.getUsername() );
+        emailService.sendOEmail(request.getEmail(), password, request.getUsername());
         adminRepository.save(admin);
         return "Sub Admin Created for Role:" + request.getAdminRole().name();
     }
@@ -296,10 +297,8 @@ public class AdminService {
 
         // Shuffle password characters
         List<Character> chars = new ArrayList<>();
-        if (password != null) {
-            for (int i = 0; i < password.length(); i++) {
-                chars.add(password.charAt(i));
-            }
+        for (int i = 0; i < password.length(); i++) {
+            chars.add(password.charAt(i));
         }
 
         List<Character> shuffled = new ArrayList<>(chars);
@@ -320,7 +319,7 @@ public class AdminService {
         String adminId = jwtUtil.extractUserId(token);
 
         // Rate Limiting
-        String today = java.time.LocalDate.now().toString();
+        String today = java.time.LocalDate.now(java.time.ZoneOffset.UTC).toString();
         String rateLimitKey = adminId + "_" + today;
         com.example.admin_service.model.AdminRateLimit rateLimit = adminRateLimitRepository.getAdminRateLimit(rateLimitKey);
 
@@ -331,7 +330,7 @@ public class AdminService {
         }
 
         if (rateLimit.getBroadcastCount() >= 5) {
-            throw new RuntimeException("Rate limit exceeded: Max 5 broadcasts per day allowed.");
+            throw new IllegalStateException("Rate limit exceeded: Max 5 broadcasts per day allowed.");
         }
 
         try {
@@ -340,10 +339,10 @@ public class AdminService {
                 finalChannels.remove("SMS");
             }
             if (finalChannels.contains("SMS") && !"SUPER_ADMIN".equals(role)) {
-                throw new RuntimeException("Only SUPER_ADMIN can send SMS broadcasts");
+                throw new org.springframework.security.access.AccessDeniedException("Only SUPER_ADMIN can send SMS broadcasts");
             }
-            if (!finalChannels.contains("IN_APP")) {
-                finalChannels.add("IN_APP");
+            if (!finalChannels.contains(IN_APP_CHANNEL)) {
+                finalChannels.add(IN_APP_CHANNEL);
             }
 
             com.example.admin_service.dto.request.BroadcastNotificationRequest notif = com.example.admin_service.dto.request.BroadcastNotificationRequest.builder()
@@ -362,9 +361,11 @@ public class AdminService {
             adminRateLimitRepository.save(rateLimit);
 
             return "Broadcast sent successfully";
+        } catch (org.springframework.security.access.AccessDeniedException ade) {
+            throw ade;
         } catch (Exception ex) {
             log.error("Failed to send broadcast", ex);
-            throw new RuntimeException("Failed to send broadcast", ex);
+            throw new DownstreamServiceException("Failed to send broadcast", ex);
         }
     }
 
@@ -377,14 +378,14 @@ public class AdminService {
                     .title("Account Suspended")
                     .message("Your account has been suspended by the admin. Reason: " + reason)
                     .type("ACCOUNT_SUSPENDED")
-                    .channels(java.util.List.of("IN_APP", "EMAIL"))
+                    .channels(java.util.List.of(IN_APP_CHANNEL, "EMAIL"))
                     .referenceId(userId + "_suspend_" + System.currentTimeMillis())
                     .build();
             notificationClient.sendInternalNotification(token, notif);
             return "User suspended and notified successfully";
         } catch (Exception ex) {
             log.error("Failed to notify suspended user", ex);
-            throw new RuntimeException("Failed to notify user", ex);
+            throw new DownstreamServiceException("Failed to notify user", ex);
         }
     }
 }

@@ -23,7 +23,7 @@ class AdminControllerTest {
     @InjectMocks
     private AdminController adminController;
 
-    private final String TOKEN = "Bearer token";
+    private static final String TOKEN = "Bearer token";
 
     @BeforeEach
     void setUp() {
@@ -34,7 +34,7 @@ class AdminControllerTest {
     @Test
     void subAdmin_success() {
         SubAdminRequest request = new SubAdminRequest();
-        when(adminService.subAdminCreate(TOKEN, request)).thenReturn("Created");
+        when(adminService.subAdminCreate(request)).thenReturn("Created");
 
         ResponseEntity<String> response = adminController.subAdmin(TOKEN, request);
         assertEquals(200, response.getStatusCode().value());

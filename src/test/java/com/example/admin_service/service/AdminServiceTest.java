@@ -243,7 +243,7 @@ class AdminServiceTest {
             request.setUsername("sub1");
             request.setAdminRole(AdminRole.USER_ADMIN);
 
-            String result = adminService.subAdminCreate(TOKEN, request);
+            String result = adminService.subAdminCreate(request);
 
             assertTrue(result.contains("Sub Admin Created"));
             assertTrue(result.contains("USER_ADMIN"));
@@ -349,7 +349,8 @@ class AdminServiceTest {
 
     @Test
     void processPayoutRequest_nullToken_throws() {
-        assertThrows(UnauthorizedPayoutAccessException.class, () -> adminService.processPayoutRequest(null, new ProcessPayoutRequest()));
+        ProcessPayoutRequest request = new ProcessPayoutRequest();
+        assertThrows(UnauthorizedPayoutAccessException.class, () -> adminService.processPayoutRequest(null, request));
     }
 
     @Test

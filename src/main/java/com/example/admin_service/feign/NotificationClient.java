@@ -22,12 +22,7 @@ public interface NotificationClient {
 
         @Bean
         public RequestInterceptor requestInterceptor() {
-            return new RequestInterceptor() {
-                @Override
-                public void apply(feign.RequestTemplate requestTemplate) {
-                    requestTemplate.header("X-Internal-Service-Key", internalServiceKey);
-                }
-            };
+            return requestTemplate -> requestTemplate.header("X-Internal-Service-Key", internalServiceKey);
         }
     }
 

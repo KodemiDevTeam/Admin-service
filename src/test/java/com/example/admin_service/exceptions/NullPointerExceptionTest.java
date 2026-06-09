@@ -19,7 +19,7 @@ class NullPointerExceptionTest {
         ExpiredJwtException cause = new ExpiredJwtException(null, null, "Expired");
         InvalidTokenException ex = new InvalidTokenException("Token expired", cause);
         assertEquals("Token expired", ex.getMessage());
-        assertNull(ex.getCause(), "Cause is not stored in current constructor");
+        assertSame(cause, ex.getCause(), "Cause is stored in current constructor");
     }
 
     @Test

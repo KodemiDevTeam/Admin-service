@@ -12,7 +12,7 @@ class PayoutRequestTest {
     // ===== BUILDER TEST =====
     @Test
     void testBuilder() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.of(2026, java.time.Month.JUNE, 9, 12, 0);
 
         PayoutRequest request = PayoutRequest.builder()
                 .payoutId("p1")
@@ -46,7 +46,7 @@ class PayoutRequestTest {
     void testGettersAndSetters() {
         PayoutRequest request = new PayoutRequest();
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.of(2026, java.time.Month.JUNE, 9, 12, 0);
 
         request.setPayoutId("p2");
         request.setTrainerId("t2");
@@ -76,7 +76,7 @@ class PayoutRequestTest {
     // ===== ALL ARGS CONSTRUCTOR =====
     @Test
     void testAllArgsConstructor() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.of(2026, java.time.Month.JUNE, 9, 12, 0);
 
         PayoutRequest request = new PayoutRequest(
                 "p3",

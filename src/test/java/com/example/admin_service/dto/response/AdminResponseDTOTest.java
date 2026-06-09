@@ -4,7 +4,7 @@ import com.example.admin_service.enums.AdminRole;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AdminResponseDTOTest {
+class AdminResponseDTOTest {
 
     @Test
     void testGettersSettersAndConstructors() {

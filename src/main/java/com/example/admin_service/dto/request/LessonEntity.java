@@ -2,7 +2,7 @@ package com.example.admin_service.dto.request;
 
 import lombok.*;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -18,11 +18,11 @@ public class LessonEntity {
     private Integer duration;
     private Integer orderIndex;
     private List<ContentItem> contentKey;
-    private Date createdAt;
-    private Date updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
     private String lessonType;
     private String liveSessionId;
-    private Date scheduledAt;
+    private Instant scheduledAt;
     private String videoKey;
 
     public static class ContentItem {

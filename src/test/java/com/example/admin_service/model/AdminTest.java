@@ -1,11 +1,10 @@
 package com.example.admin_service.model;
 
-import com.example.admin_service.enums.AdminRole;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AdminTest {
+class AdminTest {
 
     @Test
     void testAdminGettersAndSetters() {
