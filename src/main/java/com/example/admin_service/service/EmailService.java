@@ -71,6 +71,7 @@ public class EmailService {
         message.setText(
                 "Hello " + username + ",\n\n" +
                         "Your Sub Admin account has been created successfully.\n\n" +
+                        "KodeMI - Onboarding credentials:\n\n" +
                         "Login Credentials:\n" +
                         "Email: " + toEmail + "\n" +
                         "Password: " + password + "\n\n" +

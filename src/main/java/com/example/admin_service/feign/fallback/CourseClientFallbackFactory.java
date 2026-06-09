@@ -18,13 +18,15 @@ public class CourseClientFallbackFactory implements FallbackFactory<CourseClient
         return new CourseClient() {
             @Override
             public Map<String, Object> reviewCourse(String token, String courseId, CourseModerationRequest request) {
-                log.error("CourseClient reviewCourse failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("CourseClient reviewCourse failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Course service is currently unavailable.", cause);
             }
 
             @Override
             public List<CourseResponseDTO> getAllCoursesAdmin(String token) {
-                log.error("CourseClient getAllCoursesAdmin failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("CourseClient getAllCoursesAdmin failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Course service is currently unavailable.", cause);
             }
         };

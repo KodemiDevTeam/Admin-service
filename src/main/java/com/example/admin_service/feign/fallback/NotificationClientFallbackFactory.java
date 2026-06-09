@@ -3,10 +3,10 @@ package com.example.admin_service.feign.fallback;
 import com.example.admin_service.feign.NotificationClient;
 import com.example.admin_service.dto.request.BroadcastNotificationRequest;
 import com.example.admin_service.dto.request.NotificationRequest;
+import com.example.admin_service.exceptions.DownstreamServiceException;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
-import java.util.Collections;
 import java.util.Map;
 
 @Slf4j
@@ -17,14 +17,16 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
         return new NotificationClient() {
             @Override
             public Map<String, String> sendInternalNotification(String token, NotificationRequest request) {
-                log.error("NotificationClient sendInternalNotification failed (failing silent): {}", cause.getMessage(), cause);
-                return Collections.emptyMap();
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("NotificationClient sendInternalNotification failed: {}", errorMessage, cause);
+                throw new DownstreamServiceException("Notification service is currently unavailable.", cause);
             }
 
             @Override
             public Map<String, String> broadcastNotification(String token, BroadcastNotificationRequest request) {
-                log.error("NotificationClient broadcastNotification failed (failing silent): {}", cause.getMessage(), cause);
-                return Collections.emptyMap();
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("NotificationClient broadcastNotification failed: {}", errorMessage, cause);
+                throw new DownstreamServiceException("Notification service is currently unavailable.", cause);
             }
         };
     }

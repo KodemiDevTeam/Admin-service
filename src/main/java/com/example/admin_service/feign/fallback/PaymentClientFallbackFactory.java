@@ -18,25 +18,29 @@ public class PaymentClientFallbackFactory implements FallbackFactory<PaymentClie
         return new PaymentClient() {
             @Override
             public List<PayoutRequest> getAllPayouts(String token) {
-                log.error("PaymentClient getAllPayouts failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("PaymentClient getAllPayouts failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
             }
 
             @Override
             public String processPayoutRequest(ProcessPayoutRequest request, String token) {
-                log.error("PaymentClient processPayoutRequest failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("PaymentClient processPayoutRequest failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
             }
 
             @Override
             public String processPayoutRequestByPath(String token, String action, String payoutId, String remarks) {
-                log.error("PaymentClient processPayoutRequestByPath failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("PaymentClient processPayoutRequestByPath failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
             }
 
             @Override
             public TransactionHistoryResponse getTransactionHistory() {
-                log.error("PaymentClient getTransactionHistory failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("PaymentClient getTransactionHistory failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
             }
         };
