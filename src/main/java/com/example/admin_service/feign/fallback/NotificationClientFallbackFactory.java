@@ -12,19 +12,21 @@ import java.util.Map;
 @Slf4j
 @Component
 public class NotificationClientFallbackFactory implements FallbackFactory<NotificationClient> {
+    private static final String UNKNOWN_ERROR = "Unknown error";
+
     @Override
     public NotificationClient create(Throwable cause) {
         return new NotificationClient() {
             @Override
             public Map<String, String> sendInternalNotification(String token, NotificationRequest request) {
-                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
                 log.error("NotificationClient sendInternalNotification failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Notification service is currently unavailable.", cause);
             }
 
             @Override
             public Map<String, String> broadcastNotification(String token, BroadcastNotificationRequest request) {
-                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
                 log.error("NotificationClient broadcastNotification failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Notification service is currently unavailable.", cause);
             }

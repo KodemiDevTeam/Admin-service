@@ -13,19 +13,21 @@ import java.util.Map;
 @Slf4j
 @Component
 public class CourseClientFallbackFactory implements FallbackFactory<CourseClient> {
+    private static final String UNKNOWN_ERROR = "Unknown error";
+
     @Override
     public CourseClient create(Throwable cause) {
         return new CourseClient() {
             @Override
             public Map<String, Object> reviewCourse(String token, String courseId, CourseModerationRequest request) {
-                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
                 log.error("CourseClient reviewCourse failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Course service is currently unavailable.", cause);
             }
 
             @Override
             public List<CourseResponseDTO> getAllCoursesAdmin(String token) {
-                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
                 log.error("CourseClient getAllCoursesAdmin failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Course service is currently unavailable.", cause);
             }

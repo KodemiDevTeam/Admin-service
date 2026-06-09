@@ -2,7 +2,6 @@ package com.example.admin_service.exceptions;
 
 import feign.FeignException;
 import feign.Request;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,9 +13,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
