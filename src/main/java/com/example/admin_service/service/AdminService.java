@@ -223,7 +223,7 @@ public class AdminService {
             log.info("Calling Payment service for the response..");
             return paymentClient.getAllPayouts(token);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("Failed to fetch processed payouts", ex);
             throw new FetchPendingPayoutException("Failed to fetch proccessed payouts");
         }
     }
@@ -231,10 +231,10 @@ public class AdminService {
     @Cacheable(value = "pendingPayouts")
     public TransactionHistoryResponse getAllTransactionHistory(){
         try{
-            log.info("Calling Paymnet Service for the response...");
+            log.info("Calling Payment Service for the response...");
             return paymentClient.getTransactionHistory();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("Failed to fetch all transactions", ex);
             throw new FetchPendingPayoutException("Failed to fetch all transactions.");
         }
     }
@@ -262,7 +262,7 @@ public class AdminService {
         try {
             return paymentClient.processPayoutRequestByPath(token, action, payoutId, remarks);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("Error while calling payment service", ex);
             throw new PaymentClientException("Error while calling payment service");
         }
     }
