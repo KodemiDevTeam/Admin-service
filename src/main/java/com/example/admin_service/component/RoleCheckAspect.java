@@ -57,5 +57,4 @@ public class RoleCheckAspect {
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
     }
-
 }
