@@ -230,7 +230,6 @@
                     <excludes>
                         <exclude>com/example/admin_service/exceptions/GlobalExceptionHandler*</exclude>
                         <exclude>com/example/admin_service/exceptions/DownstreamServiceException*</exclude>
-                        <exclude>com/example/admin_service/feign/fallback/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
