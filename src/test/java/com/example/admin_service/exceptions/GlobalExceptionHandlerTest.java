@@ -172,8 +172,9 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleNullPointers(ex);
 
         assertNotNull(response.getBody());
-        assertNotNull(response.getBody().get("timestamp"));
-        assertTrue(response.getBody().get("timestamp").toString().length() > 0);
+        Object timestamp = response.getBody().get("timestamp");
+        assertNotNull(timestamp);
+        assertFalse(timestamp.toString().isEmpty());
     }
 
     @Test

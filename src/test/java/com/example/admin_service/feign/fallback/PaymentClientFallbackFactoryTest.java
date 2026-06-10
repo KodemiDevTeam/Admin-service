@@ -1,6 +1,5 @@
 package com.example.admin_service.feign.fallback;
 
-import com.example.admin_service.dto.request.PayoutRequest;
 import com.example.admin_service.dto.request.ProcessPayoutRequest;
 import com.example.admin_service.dto.response.TransactionHistoryResponse;
 import com.example.admin_service.exceptions.DownstreamServiceException;
@@ -70,8 +69,10 @@ class PaymentClientFallbackFactoryTest {
 
         assertNotNull(client1);
         assertNotNull(client2);
-        assertThrows(DownstreamServiceException.class, () -> client1.getAllPayouts("token"));
-        assertThrows(DownstreamServiceException.class, () -> client2.getAllPayouts("token"));
+        DownstreamServiceException exception1 = assertThrows(DownstreamServiceException.class, () -> client1.getAllPayouts("token"));
+        assertNotNull(exception1);
+        DownstreamServiceException exception2 = assertThrows(DownstreamServiceException.class, () -> client2.getAllPayouts("token"));
+        assertNotNull(exception2);
     }
 
     @Test
