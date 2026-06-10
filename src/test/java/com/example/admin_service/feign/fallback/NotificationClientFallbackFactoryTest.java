@@ -1,5 +1,7 @@
 package com.example.admin_service.feign.fallback;
 
+import com.example.admin_service.dto.request.BroadcastNotificationRequest;
+import com.example.admin_service.dto.request.NotificationRequest;
 import com.example.admin_service.exceptions.DownstreamServiceException;
 import com.example.admin_service.feign.NotificationClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,5 +63,72 @@ class NotificationClientFallbackFactoryTest {
         NotificationClient client = fallbackFactory.create(null);
         assertNotNull(client);
         assertThrows(DownstreamServiceException.class, () -> client.sendInternalNotification("token", null));
+    }
+
+    @Test
+    void testSendInternalNotificationWithNullCause() {
+        NotificationClient client = fallbackFactory.create(null);
+        NotificationRequest request = NotificationRequest.builder()
+                .userId("user123")
+                .title("Test")
+                .message("Test message")
+                .build();
+        
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            client.sendInternalNotification("token", request);
+        });
+        
+        assertNotNull(exception.getMessage());
+    }
+
+    @Test
+    void testBroadcastNotificationWithNullCause() {
+        NotificationClient client = fallbackFactory.create(null);
+        BroadcastNotificationRequest request = BroadcastNotificationRequest.builder()
+                .title("Test")
+                .message("Test message")
+                .build();
+        
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            client.broadcastNotification("token", request);
+        });
+        
+        assertNotNull(exception.getMessage());
+    }
+
+    @Test
+    void testExceptionIncludesCause() {
+        RuntimeException cause = new RuntimeException("Original error");
+        NotificationClient client = fallbackFactory.create(cause);
+        
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            client.sendInternalNotification("token", NotificationRequest.builder().build());
+        });
+        
+        assertSame(cause, exception.getCause());
+    }
+
+    @Test
+    void testSendInternalNotificationExceptionMessage() {
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            fallbackClient.sendInternalNotification("token", NotificationRequest.builder().build());
+        });
+
+        assertTrue(exception.getMessage().contains("unavailable"));
+    }
+
+    @Test
+    void testBroadcastNotificationExceptionMessage() {
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            fallbackClient.broadcastNotification("token", BroadcastNotificationRequest.builder().build());
+        });
+
+        assertTrue(exception.getMessage().contains("unavailable"));
+    }
+
+    @Test
+    void testAllMethodsThrowDownstreamServiceException() {
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.sendInternalNotification("token", NotificationRequest.builder().build()));
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.broadcastNotification("token", BroadcastNotificationRequest.builder().build()));
     }
 }
