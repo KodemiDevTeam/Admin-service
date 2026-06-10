@@ -16,20 +16,28 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
 
     @Override
     public NotificationClient create(Throwable cause) {
-        return new NotificationClient() {
-            @Override
-            public Map<String, String> sendInternalNotification(String token, NotificationRequest request) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("NotificationClient sendInternalNotification failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Notification service is currently unavailable.", cause);
-            }
+        return new NotificationClientFallback(cause);
+    }
 
-            @Override
-            public Map<String, String> broadcastNotification(String token, BroadcastNotificationRequest request) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("NotificationClient broadcastNotification failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Notification service is currently unavailable.", cause);
-            }
-        };
+    private static class NotificationClientFallback implements NotificationClient {
+        private final Throwable cause;
+
+        NotificationClientFallback(Throwable cause) {
+            this.cause = cause;
+        }
+
+        @Override
+        public Map<String, String> sendInternalNotification(String token, NotificationRequest request) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("NotificationClient sendInternalNotification failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Notification service is currently unavailable.", cause);
+        }
+
+        @Override
+        public Map<String, String> broadcastNotification(String token, BroadcastNotificationRequest request) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("NotificationClient broadcastNotification failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Notification service is currently unavailable.", cause);
+        }
     }
 }

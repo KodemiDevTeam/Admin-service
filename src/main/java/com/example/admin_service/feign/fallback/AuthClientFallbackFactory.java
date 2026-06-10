@@ -17,34 +17,42 @@ public class AuthClientFallbackFactory implements FallbackFactory<AuthClient> {
 
     @Override
     public AuthClient create(Throwable cause) {
-        return new AuthClient() {
-            @Override
-            public ResponseEntity<Object> reviewTrainer(String token, String userId, TrainerReviewRequest request) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("AuthClient reviewTrainer failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
-            }
+        return new AuthClientFallback(cause);
+    }
 
-            @Override
-            public ResponseEntity<Object> checkStatus(String email) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("AuthClient checkStatus failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
-            }
+    private static class AuthClientFallback implements AuthClient {
+        private final Throwable cause;
 
-            @Override
-            public Object adminLogin(AdminLoginRequest adminResponseDTO) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("AuthClient adminLogin failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
-            }
+        AuthClientFallback(Throwable cause) {
+            this.cause = cause;
+        }
 
-            @Override
-            public UserDTO geUserById(String token, String userId) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("AuthClient geUserById failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
-            }
-        };
+        @Override
+        public ResponseEntity<Object> reviewTrainer(String token, String userId, TrainerReviewRequest request) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("AuthClient reviewTrainer failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
+        }
+
+        @Override
+        public ResponseEntity<Object> checkStatus(String email) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("AuthClient checkStatus failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
+        }
+
+        @Override
+        public Object adminLogin(AdminLoginRequest adminResponseDTO) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("AuthClient adminLogin failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
+        }
+
+        @Override
+        public UserDTO geUserById(String token, String userId) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("AuthClient geUserById failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
+        }
     }
 }

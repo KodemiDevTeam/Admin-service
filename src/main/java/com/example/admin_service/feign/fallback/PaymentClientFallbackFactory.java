@@ -17,34 +17,42 @@ public class PaymentClientFallbackFactory implements FallbackFactory<PaymentClie
 
     @Override
     public PaymentClient create(Throwable cause) {
-        return new PaymentClient() {
-            @Override
-            public List<PayoutRequest> getAllPayouts(String token) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("PaymentClient getAllPayouts failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
-            }
+        return new PaymentClientFallback(cause);
+    }
 
-            @Override
-            public String processPayoutRequest(ProcessPayoutRequest request, String token) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("PaymentClient processPayoutRequest failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
-            }
+    private static class PaymentClientFallback implements PaymentClient {
+        private final Throwable cause;
 
-            @Override
-            public String processPayoutRequestByPath(String token, String action, String payoutId, String remarks) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("PaymentClient processPayoutRequestByPath failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
-            }
+        PaymentClientFallback(Throwable cause) {
+            this.cause = cause;
+        }
 
-            @Override
-            public TransactionHistoryResponse getTransactionHistory() {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("PaymentClient getTransactionHistory failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
-            }
-        };
+        @Override
+        public List<PayoutRequest> getAllPayouts(String token) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("PaymentClient getAllPayouts failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
+        }
+
+        @Override
+        public String processPayoutRequest(ProcessPayoutRequest request, String token) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("PaymentClient processPayoutRequest failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
+        }
+
+        @Override
+        public String processPayoutRequestByPath(String token, String action, String payoutId, String remarks) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("PaymentClient processPayoutRequestByPath failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
+        }
+
+        @Override
+        public TransactionHistoryResponse getTransactionHistory() {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("PaymentClient getTransactionHistory failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Payment service is currently unavailable.", cause);
+        }
     }
 }

@@ -17,20 +17,28 @@ public class CourseClientFallbackFactory implements FallbackFactory<CourseClient
 
     @Override
     public CourseClient create(Throwable cause) {
-        return new CourseClient() {
-            @Override
-            public Map<String, Object> reviewCourse(String token, String courseId, CourseModerationRequest request) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("CourseClient reviewCourse failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Course service is currently unavailable.", cause);
-            }
+        return new CourseClientFallback(cause);
+    }
 
-            @Override
-            public List<CourseResponseDTO> getAllCoursesAdmin(String token) {
-                String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
-                log.error("CourseClient getAllCoursesAdmin failed: {}", errorMessage, cause);
-                throw new DownstreamServiceException("Course service is currently unavailable.", cause);
-            }
-        };
+    private static class CourseClientFallback implements CourseClient {
+        private final Throwable cause;
+
+        CourseClientFallback(Throwable cause) {
+            this.cause = cause;
+        }
+
+        @Override
+        public Map<String, Object> reviewCourse(String token, String courseId, CourseModerationRequest request) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("CourseClient reviewCourse failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Course service is currently unavailable.", cause);
+        }
+
+        @Override
+        public List<CourseResponseDTO> getAllCoursesAdmin(String token) {
+            String errorMessage = cause != null ? cause.getMessage() : UNKNOWN_ERROR;
+            log.error("CourseClient getAllCoursesAdmin failed: {}", errorMessage, cause);
+            throw new DownstreamServiceException("Course service is currently unavailable.", cause);
+        }
     }
 }
