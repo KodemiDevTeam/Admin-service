@@ -74,9 +74,9 @@ class NotificationClientFallbackFactoryTest {
                 .message("Test message")
                 .build();
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.sendInternalNotification("token", request);
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.sendInternalNotification("token", request)
+        );
         
         assertNotNull(exception.getMessage());
     }
@@ -89,9 +89,9 @@ class NotificationClientFallbackFactoryTest {
                 .message("Test message")
                 .build();
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.broadcastNotification("token", request);
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.broadcastNotification("token", request)
+        );
         
         assertNotNull(exception.getMessage());
     }
@@ -101,9 +101,9 @@ class NotificationClientFallbackFactoryTest {
         RuntimeException cause = new RuntimeException("Original error");
         NotificationClient client = fallbackFactory.create(cause);
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.sendInternalNotification("token", NotificationRequest.builder().build());
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.sendInternalNotification("token", NotificationRequest.builder().build())
+        );
         
         assertSame(cause, exception.getCause());
     }

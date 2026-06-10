@@ -1,7 +1,6 @@
 package com.example.admin_service.feign.fallback;
 
 import com.example.admin_service.dto.request.ProcessPayoutRequest;
-import com.example.admin_service.dto.response.TransactionHistoryResponse;
 import com.example.admin_service.exceptions.DownstreamServiceException;
 import com.example.admin_service.feign.PaymentClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -122,9 +121,9 @@ class PaymentClientFallbackFactoryTest {
         PaymentClient client = fallbackFactory.create(null);
         ProcessPayoutRequest request = new ProcessPayoutRequest();
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.processPayoutRequest(request, "token");
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.processPayoutRequest(request, "token")
+        );
         
         assertNotNull(exception.getMessage());
     }
@@ -133,9 +132,9 @@ class PaymentClientFallbackFactoryTest {
     void testProcessPayoutRequestByPathWithNullCause() {
         PaymentClient client = fallbackFactory.create(null);
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.processPayoutRequestByPath("token", "APPROVE", "id", "remarks");
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.processPayoutRequestByPath("token", "APPROVE", "id", "remarks")
+        );
         
         assertNotNull(exception.getMessage());
     }
@@ -144,9 +143,9 @@ class PaymentClientFallbackFactoryTest {
     void testGetTransactionHistoryWithNullCause() {
         PaymentClient client = fallbackFactory.create(null);
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.getTransactionHistory();
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.getTransactionHistory()
+        );
         
         assertNotNull(exception.getMessage());
     }
@@ -156,9 +155,9 @@ class PaymentClientFallbackFactoryTest {
         RuntimeException cause = new RuntimeException("Original error");
         PaymentClient client = fallbackFactory.create(cause);
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.getAllPayouts("token");
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.getAllPayouts("token")
+        );
         
         assertSame(cause, exception.getCause());
     }

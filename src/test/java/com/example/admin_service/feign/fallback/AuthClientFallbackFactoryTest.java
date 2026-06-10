@@ -1,7 +1,6 @@
 package com.example.admin_service.feign.fallback;
 
 import com.example.admin_service.dto.request.TrainerReviewRequest;
-import com.example.admin_service.dto.request.UserDTO;
 import com.example.admin_service.dto.response.AdminLoginRequest;
 import com.example.admin_service.exceptions.DownstreamServiceException;
 import com.example.admin_service.feign.AuthClient;
@@ -65,9 +64,9 @@ class AuthClientFallbackFactoryTest {
     void testReviewTrainerWithNullCause() {
         AuthClient client = fallbackFactory.create(null);
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.reviewTrainer("token", "userId", new TrainerReviewRequest());
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> 
+            client.reviewTrainer("token", "userId", new TrainerReviewRequest())
+        );
         
         assertNotNull(exception.getMessage());
     }
@@ -77,9 +76,9 @@ class AuthClientFallbackFactoryTest {
         AuthClient client = fallbackFactory.create(null);
         AdminLoginRequest request = new AdminLoginRequest();
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.adminLogin(request);
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.adminLogin(request)
+        );
         
         assertNotNull(exception.getMessage());
     }
@@ -88,9 +87,9 @@ class AuthClientFallbackFactoryTest {
     void testGetUserByIdWithNullCause() {
         AuthClient client = fallbackFactory.create(null);
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.geUserById("token", "userId");
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.geUserById("token", "userId")
+        );
         
         assertNotNull(exception.getMessage());
     }

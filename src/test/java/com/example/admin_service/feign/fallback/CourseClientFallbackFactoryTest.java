@@ -1,7 +1,6 @@
 package com.example.admin_service.feign.fallback;
 
 import com.example.admin_service.dto.request.CourseModerationRequest;
-import com.example.admin_service.dto.response.CourseResponseDTO;
 import com.example.admin_service.exceptions.DownstreamServiceException;
 import com.example.admin_service.feign.CourseClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,9 +69,9 @@ class CourseClientFallbackFactoryTest {
         CourseClient client = fallbackFactory.create(null);
         CourseModerationRequest request = new CourseModerationRequest();
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.reviewCourse("token", "courseId", request);
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.reviewCourse("token", "courseId", request)
+        );
         
         assertNotNull(exception.getMessage());
     }
@@ -81,9 +80,9 @@ class CourseClientFallbackFactoryTest {
     void testGetAllCoursesAdminWithNullCause() {
         CourseClient client = fallbackFactory.create(null);
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            client.getAllCoursesAdmin("token");
-        });
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
+            client.getAllCoursesAdmin("token")
+        );
         
         assertNotNull(exception.getMessage());
     }
