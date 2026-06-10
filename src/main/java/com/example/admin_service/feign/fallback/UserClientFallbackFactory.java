@@ -18,31 +18,36 @@ public class UserClientFallbackFactory implements FallbackFactory<UserClient> {
         return new UserClient() {
             @Override
             public TrainerResponseDTO getTrainerById(String token, String trainerId) {
-                log.error("UserClient getTrainerById failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("UserClient getTrainerById failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("User service is currently unavailable.", cause);
             }
 
             @Override
             public List<TrainerResponseDTO> getAllTrainers(String token) {
-                log.error("UserClient getAllTrainers failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("UserClient getAllTrainers failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("User service is currently unavailable.", cause);
             }
 
             @Override
             public AdminResponseDTO getAdmin(String id) {
-                log.error("UserClient getAdmin failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("UserClient getAdmin failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("User service is currently unavailable.", cause);
             }
 
             @Override
             public List<TrainerResponseDTO> getAllPendingTrainers(String token) {
-                log.error("UserClient getAllPendingTrainers failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("UserClient getAllPendingTrainers failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("User service is currently unavailable.", cause);
             }
 
             @Override
             public LearnerResponseDTO getLearner(String token, String id) {
-                log.error("UserClient getLearner failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("UserClient getLearner failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("User service is currently unavailable.", cause);
             }
         };

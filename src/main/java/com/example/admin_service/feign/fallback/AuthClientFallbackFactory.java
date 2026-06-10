@@ -18,25 +18,29 @@ public class AuthClientFallbackFactory implements FallbackFactory<AuthClient> {
         return new AuthClient() {
             @Override
             public ResponseEntity<Object> reviewTrainer(String token, String userId, TrainerReviewRequest request) {
-                log.error("AuthClient reviewTrainer failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("AuthClient reviewTrainer failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
             }
 
             @Override
             public ResponseEntity<Object> checkStatus(String email) {
-                log.error("AuthClient checkStatus failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("AuthClient checkStatus failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
             }
 
             @Override
             public Object adminLogin(AdminLoginRequest adminResponseDTO) {
-                log.error("AuthClient adminLogin failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("AuthClient adminLogin failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
             }
 
             @Override
             public UserDTO geUserById(String token, String userId) {
-                log.error("AuthClient geUserById failed: {}", cause.getMessage(), cause);
+                String errorMessage = cause != null ? cause.getMessage() : "Unknown error";
+                log.error("AuthClient geUserById failed: {}", errorMessage, cause);
                 throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
             }
         };

@@ -1,5 +1,7 @@
 package com.example.admin_service.feign.fallback;
 
+import com.example.admin_service.dto.request.TrainerReviewRequest;
+import com.example.admin_service.dto.request.UserDTO;
 import com.example.admin_service.dto.response.AdminLoginRequest;
 import com.example.admin_service.exceptions.DownstreamServiceException;
 import com.example.admin_service.feign.AuthClient;
@@ -20,22 +22,28 @@ class AuthClientFallbackFactoryTest {
     }
 
     @Test
-    void testAdminLoginThrowsDownstreamServiceException() {
-        AdminLoginRequest request = new AdminLoginRequest();
-        assertThrows(DownstreamServiceException.class, () -> {
-            fallbackClient.adminLogin(request);
-        });
-    }
-
-    @Test
     void testReviewTrainerThrowsDownstreamServiceException() {
         assertThrows(DownstreamServiceException.class, () -> {
-            fallbackClient.reviewTrainer("token", "trainerId", null);
+            fallbackClient.reviewTrainer("token", "userId", null);
         });
     }
 
     @Test
-    void testGeUserByIdThrowsDownstreamServiceException() {
+    void testCheckStatusThrowsDownstreamServiceException() {
+        assertThrows(DownstreamServiceException.class, () -> {
+            fallbackClient.checkStatus("user@example.com");
+        });
+    }
+
+    @Test
+    void testAdminLoginThrowsDownstreamServiceException() {
+        assertThrows(DownstreamServiceException.class, () -> {
+            fallbackClient.adminLogin(null);
+        });
+    }
+
+    @Test
+    void testGetUserByIdThrowsDownstreamServiceException() {
         assertThrows(DownstreamServiceException.class, () -> {
             fallbackClient.geUserById("token", "userId");
         });
@@ -47,12 +55,64 @@ class AuthClientFallbackFactoryTest {
     }
 
     @Test
-    void testFallbackFactoryCreateWithDifferentCauses() {
-        AuthClient client1 = fallbackFactory.create(new RuntimeException("Error 1"));
-        AuthClient client2 = fallbackFactory.create(new IllegalStateException("Error 2"));
+    void testFallbackWithNullCause() {
+        AuthClient client = fallbackFactory.create(null);
+        assertNotNull(client);
+        assertThrows(DownstreamServiceException.class, () -> client.checkStatus("user@example.com"));
+    }
 
-        assertNotNull(client1);
-        assertNotNull(client2);
+    @Test
+    void testReviewTrainerWithNullCause() {
+        AuthClient client = fallbackFactory.create(null);
+        
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            client.reviewTrainer("token", "userId", new TrainerReviewRequest());
+        });
+        
+        assertNotNull(exception.getMessage());
+    }
+
+    @Test
+    void testAdminLoginWithNullCause() {
+        AuthClient client = fallbackFactory.create(null);
+        AdminLoginRequest request = new AdminLoginRequest();
+        
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            client.adminLogin(request);
+        });
+        
+        assertNotNull(exception.getMessage());
+    }
+
+    @Test
+    void testGetUserByIdWithNullCause() {
+        AuthClient client = fallbackFactory.create(null);
+        
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            client.geUserById("token", "userId");
+        });
+        
+        assertNotNull(exception.getMessage());
+    }
+
+    @Test
+    void testExceptionIncludesCause() {
+        RuntimeException cause = new RuntimeException("Original error");
+        AuthClient client = fallbackFactory.create(cause);
+        
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            client.checkStatus("user@example.com");
+        });
+        
+        assertSame(cause, exception.getCause());
+    }
+
+    @Test
+    void testAllMethodsThrowDownstreamServiceException() {
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.reviewTrainer("token", "id", new TrainerReviewRequest()));
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.checkStatus("email@example.com"));
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.adminLogin(new AdminLoginRequest()));
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.geUserById("token", "userId"));
     }
 
     @Test
@@ -63,5 +123,27 @@ class AuthClientFallbackFactoryTest {
         assertNotNull(fallback1);
         assertNotNull(fallback2);
         assertNotSame(fallback1, fallback2);
+    }
+
+    @Test
+    void testFallbackFactoryCreateWithDifferentCauses() {
+        AuthClient client1 = fallbackFactory.create(new RuntimeException("Error 1"));
+        AuthClient client2 = fallbackFactory.create(new IllegalStateException("Error 2"));
+
+        assertNotNull(client1);
+        assertNotNull(client2);
+        DownstreamServiceException exception1 = assertThrows(DownstreamServiceException.class, () -> client1.checkStatus("test@example.com"));
+        assertNotNull(exception1);
+        DownstreamServiceException exception2 = assertThrows(DownstreamServiceException.class, () -> client2.checkStatus("test@example.com"));
+        assertNotNull(exception2);
+    }
+
+    @Test
+    void testExceptionMessageContainsServiceUnavailable() {
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
+            fallbackClient.checkStatus("user@example.com");
+        });
+
+        assertTrue(exception.getMessage().contains("unavailable"));
     }
 }
