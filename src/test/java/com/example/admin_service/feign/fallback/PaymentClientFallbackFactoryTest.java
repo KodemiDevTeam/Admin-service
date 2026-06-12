@@ -82,8 +82,9 @@ class PaymentClientFallbackFactoryTest {
     @Test
     void testAllFallbackMethodsThrowDownstreamServiceException() {
         // Test all methods throw the same type of exception
+        ProcessPayoutRequest payoutRequest = new ProcessPayoutRequest();
         assertThrows(DownstreamServiceException.class, () -> fallbackClient.getAllPayouts("token"));
-        assertThrows(DownstreamServiceException.class, () -> fallbackClient.processPayoutRequest(new ProcessPayoutRequest(), "token"));
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.processPayoutRequest(payoutRequest, "token"));
         assertThrows(DownstreamServiceException.class, () -> fallbackClient.processPayoutRequestByPath("token", "APPROVE", "id", "remarks"));
         assertThrows(DownstreamServiceException.class, () -> fallbackClient.getTransactionHistory());
     }
@@ -143,9 +144,7 @@ class PaymentClientFallbackFactoryTest {
     void testGetTransactionHistoryWithNullCause() {
         PaymentClient client = fallbackFactory.create(null);
         
-        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () ->
-            client.getTransactionHistory()
-        );
+        DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, client::getTransactionHistory);
         
         assertNotNull(exception.getMessage());
     }

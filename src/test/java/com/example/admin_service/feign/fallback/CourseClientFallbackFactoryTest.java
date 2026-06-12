@@ -101,8 +101,9 @@ class CourseClientFallbackFactoryTest {
 
     @Test
     void testReviewCourseExceptionMessage() {
+        CourseModerationRequest request = new CourseModerationRequest();
         DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> {
-            fallbackClient.reviewCourse("token", "courseId", new CourseModerationRequest());
+            fallbackClient.reviewCourse("token", "courseId", request);
         });
 
         assertTrue(exception.getMessage().contains("unavailable"));
@@ -110,7 +111,8 @@ class CourseClientFallbackFactoryTest {
 
     @Test
     void testAllMethodsThrowDownstreamServiceException() {
+        CourseModerationRequest moderationRequest = new CourseModerationRequest();
         assertThrows(DownstreamServiceException.class, () -> fallbackClient.getAllCoursesAdmin("token"));
-        assertThrows(DownstreamServiceException.class, () -> fallbackClient.reviewCourse("token", "id", new CourseModerationRequest()));
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.reviewCourse("token", "id", moderationRequest));
     }
 }

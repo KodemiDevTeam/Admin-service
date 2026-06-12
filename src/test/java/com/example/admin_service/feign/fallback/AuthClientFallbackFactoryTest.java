@@ -63,9 +63,10 @@ class AuthClientFallbackFactoryTest {
     @Test
     void testReviewTrainerWithNullCause() {
         AuthClient client = fallbackFactory.create(null);
+        TrainerReviewRequest request = new TrainerReviewRequest();
         
         DownstreamServiceException exception = assertThrows(DownstreamServiceException.class, () -> 
-            client.reviewTrainer("token", "userId", new TrainerReviewRequest())
+            client.reviewTrainer("token", "userId", request)
         );
         
         assertNotNull(exception.getMessage());
@@ -108,9 +109,11 @@ class AuthClientFallbackFactoryTest {
 
     @Test
     void testAllMethodsThrowDownstreamServiceException() {
-        assertThrows(DownstreamServiceException.class, () -> fallbackClient.reviewTrainer("token", "id", new TrainerReviewRequest()));
+        TrainerReviewRequest reviewRequest = new TrainerReviewRequest();
+        AdminLoginRequest loginRequest = new AdminLoginRequest();
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.reviewTrainer("token", "id", reviewRequest));
         assertThrows(DownstreamServiceException.class, () -> fallbackClient.checkStatus("email@example.com"));
-        assertThrows(DownstreamServiceException.class, () -> fallbackClient.adminLogin(new AdminLoginRequest()));
+        assertThrows(DownstreamServiceException.class, () -> fallbackClient.adminLogin(loginRequest));
         assertThrows(DownstreamServiceException.class, () -> fallbackClient.geUserById("token", "userId"));
     }
 
