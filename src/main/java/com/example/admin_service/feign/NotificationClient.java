@@ -1,33 +1,36 @@
 package com.example.admin_service.feign;
 
-import com.example.admin_service.dto.request.BroadcastNotificationRequest;
-import com.example.admin_service.dto.request.NotificationRequest;
+import com.example.admin_service.dto.notification.BroadcastNotificationRequest;
+import com.example.admin_service.dto.notification.NotificationRequest;
+import feign.RequestInterceptor;
+import io.github.resilience4j.retry.annotation.Retry;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import io.github.resilience4j.retry.annotation.Retry;
-import java.util.Map;
-import feign.RequestInterceptor;
-import org.springframework.context.annotation.Bean;
-import org.springframework.beans.factory.annotation.Value;
 
-@FeignClient(name = "notification-service", configuration = NotificationClient.Configuration.class, fallbackFactory = com.example.admin_service.feign.fallback.NotificationClientFallbackFactory.class)
+import java.util.Map;
+
+@FeignClient(
+        name = "notification-service",
+        contextId = "adminNotificationClient",
+        configuration = NotificationClient.Configuration.class,
+        fallbackFactory = com.example.admin_service.feign.fallback.NotificationClientFallbackFactory.class
+)
 @Retry(name = "default")
 public interface NotificationClient {
 
     class Configuration {
+
         @Value("${internal.service.key:default-secret}")
         private String internalServiceKey;
 
         @Bean
         public RequestInterceptor requestInterceptor() {
-            return new RequestInterceptor() {
-                @Override
-                public void apply(feign.RequestTemplate requestTemplate) {
+            return requestTemplate ->
                     requestTemplate.header("X-Internal-Service-Key", internalServiceKey);
-                }
-            };
         }
     }
 

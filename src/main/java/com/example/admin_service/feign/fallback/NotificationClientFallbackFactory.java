@@ -1,8 +1,8 @@
 package com.example.admin_service.feign.fallback;
 
 import com.example.admin_service.feign.NotificationClient;
-import com.example.admin_service.dto.request.BroadcastNotificationRequest;
-import com.example.admin_service.dto.request.NotificationRequest;
+import com.example.admin_service.dto.notification.BroadcastNotificationRequest;
+import com.example.admin_service.dto.notification.NotificationRequest;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;

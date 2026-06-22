@@ -11,7 +11,11 @@ import com.example.admin_service.feign.AuthClient;
 import com.example.admin_service.feign.CourseClient;
 import com.example.admin_service.feign.PaymentClient;
 import com.example.admin_service.feign.UserClient;
-import com.example.admin_service.feign.NotificationClient;
+import com.example.admin_service.service.notification.NotificationPublisher;
+import com.example.admin_service.dto.notification.NotificationRequest;
+import com.example.admin_service.dto.notification.BroadcastNotificationRequest;
+import com.example.admin_service.dto.notification.NotificationType;
+import com.example.admin_service.dto.notification.NotificationChannel;
 import com.example.admin_service.repository.AdminRateLimitRepository;
 import com.example.admin_service.repository.AdminRepository;
 import com.example.admin_service.model.Admin;
@@ -60,10 +64,10 @@ public class AdminService {
     private final EmailService emailService;
     private final AdminRateLimitRepository adminRateLimitRepository;
 
-    private final com.example.admin_service.feign.NotificationClient notificationClient;
+    private final NotificationPublisher notificationPublisher;
 
     @Autowired
-    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, SecureRandom random, EmailService emailService, com.example.admin_service.feign.NotificationClient notificationClient, AdminRateLimitRepository adminRateLimitRepository) {
+    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, SecureRandom random, EmailService emailService, NotificationPublisher notificationPublisher, AdminRateLimitRepository adminRateLimitRepository) {
         this.userClient = userClient;
         this.authClient = authClient;
         this.courseClient = courseClient;
@@ -73,7 +77,7 @@ public class AdminService {
         this.passwordEncoder = passwordEncoder;
         this.random = random;
         this.emailService = emailService;
-        this.notificationClient = notificationClient;
+        this.notificationPublisher = notificationPublisher;
         this.adminRateLimitRepository = adminRateLimitRepository;
     }
     public Object getUser(String token, String id) {
@@ -102,7 +106,37 @@ public class AdminService {
         com.example.admin_service.dto.request.TrainerReviewRequest req = new com.example.admin_service.dto.request.TrainerReviewRequest();
         req.setAction(action);
         req.setRemarks(remarks);
-        return authClient.reviewTrainer(token, trainerId, req);
+        Object response = authClient.reviewTrainer(token, trainerId, req);
+
+        try {
+            if ("APPROVE".equalsIgnoreCase(action)) {
+                NotificationRequest notif = NotificationRequest.builder()
+                        .userId(trainerId)
+                        .title("Trainer Application Approved")
+                        .message("Congratulations! Your trainer application has been approved. You can now start creating courses.")
+                        .type(NotificationType.TRAINER_VERIFIED)
+                        .channels(List.of(NotificationChannel.EMAIL))
+                        .referenceId(trainerId)
+                        .referenceType("USER")
+                        .build();
+                notificationPublisher.publish(notif);
+            } else if ("REJECT".equalsIgnoreCase(action)) {
+                NotificationRequest notif = NotificationRequest.builder()
+                        .userId(trainerId)
+                        .title("Trainer Application Rejected")
+                        .message("We regret to inform you that your trainer application has been rejected. Reason: " + remarks)
+                        .type(NotificationType.TRAINER_REJECTED)
+                        .channels(List.of(NotificationChannel.EMAIL))
+                        .referenceId(trainerId)
+                        .referenceType("USER")
+                        .build();
+                notificationPublisher.publish(notif);
+            }
+        } catch (Exception ex) {
+            log.error("Failed to send trainer review notification", ex);
+        }
+
+        return response;
     }
 
     @Cacheable(value = "allTrainers")
@@ -346,16 +380,23 @@ public class AdminService {
                 finalChannels.add("IN_APP");
             }
 
-            com.example.admin_service.dto.request.BroadcastNotificationRequest notif = com.example.admin_service.dto.request.BroadcastNotificationRequest.builder()
+            List<NotificationChannel> channels = new ArrayList<>();
+            for(String ch : finalChannels) {
+                channels.add(NotificationChannel.valueOf(ch));
+            }
+
+            BroadcastNotificationRequest notif = BroadcastNotificationRequest.builder()
                     .title(request.getTitle())
                     .message(request.getMessage())
-                    .type("ADMIN_BROADCAST")
-                    .channels(finalChannels)
-                    .targetRoles(request.getTargetRole() != null && !request.getTargetRole().equals("ALL")
-                            ? java.util.List.of(request.getTargetRole()) : null)
+                    .type(NotificationType.ADMIN_BROADCAST)
+                    .channels(channels)
+                    .targetRole(request.getTargetRole() != null && !request.getTargetRole().equals("ALL")
+                            ? request.getTargetRole() : null)
+                    .sendMode(request.getTargetRole() != null && !request.getTargetRole().equals("ALL") ? "ROLE_BASED" : "ALL_USERS")
                     .referenceId(java.util.UUID.randomUUID().toString())
+                    .referenceType("BROADCAST")
                     .build();
-            notificationClient.broadcastNotification(token, notif);
+            notificationPublisher.publishBroadcast(notif);
 
             // Increment rate limit
             rateLimit.setBroadcastCount(rateLimit.getBroadcastCount() + 1);
@@ -372,15 +413,16 @@ public class AdminService {
         try {
             // Assume the actual suspension logic is handled somewhere or we just send the notification
             // if we don't have the external client for it right now.
-            com.example.admin_service.dto.request.NotificationRequest notif = com.example.admin_service.dto.request.NotificationRequest.builder()
+            NotificationRequest notif = NotificationRequest.builder()
                     .userId(userId)
                     .title("Account Suspended")
                     .message("Your account has been suspended by the admin. Reason: " + reason)
-                    .type("ACCOUNT_SUSPENDED")
-                    .channels(java.util.List.of("IN_APP", "EMAIL"))
+                    .type(NotificationType.ACCOUNT_SUSPENDED)
+                    .channels(List.of(NotificationChannel.IN_APP, NotificationChannel.EMAIL))
                     .referenceId(userId + "_suspend_" + System.currentTimeMillis())
+                    .referenceType("USER")
                     .build();
-            notificationClient.sendInternalNotification(token, notif);
+            notificationPublisher.publish(notif);
             return "User suspended and notified successfully";
         } catch (Exception ex) {
             log.error("Failed to notify suspended user", ex);

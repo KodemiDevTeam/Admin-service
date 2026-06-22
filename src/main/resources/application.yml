@@ -1,14 +1,14 @@
 server:
-  port: 8551
+  port: ${SERVER_PORT:8551}
 
 spring:
   application:
     name: admin-service
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${SPRING_MAIL_USERNAME:}
-    password: ${SPRING_MAIL_PASSWORD:}
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -16,36 +16,36 @@ spring:
           starttls:
             enable: true
           ssl:
-            trust: smtp.gmail.com
+            trust: ${MAIL_SMTP_SSL_TRUST:smtp.gmail.com}
   cloud:
     openfeign:
       circuitbreaker:
         enabled: true
 
 jwt:
-  secret: ${JWT_SECRET:}
+  secret: ${JWT_SECRET}
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL}
   instance:
     prefer-ip-address: true
 
 dynamodb:
-  region: eu-north-1
+  region: ${AWS_REGION}
 
 cloud:
   aws:
     region:
-      static: eu-north-1
+      static: ${AWS_REGION}
     stack:
       auto: false
 
 aws:
   s3:
-    region: eu-north-1
-    bucket-name: profile-picture-kodemi
+    region: ${AWS_REGION}
+    bucket-name: ${S3_BUCKET_NAME}
 
 feign:
   httpclient:
