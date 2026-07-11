@@ -64,35 +64,41 @@ pipeline {
 
         /* ================= BUILD ================= */
 
-        stage('Build (No Tests)') {
+        stage('Build') {
             steps {
                 sh '''
-                    echo "===== BUILD WITHOUT TESTS ====="
+                    echo "===== BUILD ====="
 
-                    mvn -B clean install \
-                    -Dmaven.test.skip=true \
-                    -Deureka.client.enabled=false \
-                    -Dspring.cloud.discovery.enabled=false
+                    chmod +x mvnw
+
+                    ./mvnw -B clean install \
+                        -Deureka.client.enabled=false \
+                        -Dspring.cloud.discovery.enabled=false
                 '''
             }
         }
 
-        /* ================= SONAR (FIXED) ================= */
+        /* ================= SONARQUBE ================= */
 
-        stage('SonarQube Analysis (No Tests)') {
+        stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube2') {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                withSonarQubeEnv('sonarscanner') {
+                    withCredentials([
+                        string(
+                            credentialsId: 'sonartk',
+                            variable: 'SONAR_TOKEN'
+                        )
+                    ]) {
                         sh '''
                             echo "===== SONAR ANALYSIS ====="
 
-                            mvn -B sonar:sonar \
-                            -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                            -Dsonar.projectName=$SONAR_PROJECT_NAME \
-                            -Dsonar.login=$SONAR_TOKEN \
-                            -Dsonar.sources=src/main/java \
-                            -Dsonar.exclusions=**/target/**,**/node_modules/**,**/*.log \
-                            -Dsonar.scm.disabled=true
+                            ./mvnw -B sonar:sonar \
+                                -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+                                -Dsonar.projectName=$SONAR_PROJECT_NAME \
+                                -Dsonar.login=$SONAR_TOKEN \
+                                -Dsonar.sources=src/main/java \
+                                -Dsonar.exclusions=**/target/**,**/node_modules/**,**/*.log \
+                                -Dsonar.scm.disabled=true
                         '''
                     }
                 }
@@ -102,39 +108,55 @@ pipeline {
         /* ================= QUALITY GATE ================= */
 
         stage('Quality Gate') {
-    steps {
-        script {
-            try {
-                timeout(time: 10, unit: 'MINUTES') {
-                    def qg = waitForQualityGate abortPipeline: false
-                    echo "Quality Gate Status: ${qg?.status}"
+            steps {
+                script {
+                    try {
+                        timeout(time: 10, unit: 'MINUTES') {
 
-                    if (qg?.status && qg.status != 'OK') {
+                            def qg = waitForQualityGate abortPipeline: false
+
+                            echo "Quality Gate Status: ${qg?.status}"
+
+                            if (qg?.status && qg.status != 'OK') {
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+
+                    } catch (Exception e) {
+
+                        echo "Quality Gate skipped due to Sonar issue: ${e}"
+
                         currentBuild.result = 'UNSTABLE'
                     }
                 }
-            } catch (Exception e) {
-                echo "Quality Gate skipped due to Sonar issue: ${e}"
-                currentBuild.result = 'UNSTABLE'
             }
         }
-    }
-}
 
         /* ================= SECURITY ================= */
 
         stage('OWASP Dependency Check') {
             steps {
-                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                    dependencyCheck additionalArguments: "--format XML --format HTML --nvdApiKey=$NVD_API_KEY",
-                                    odcInstallation: 'Default'
+                withCredentials([
+                    string(
+                        credentialsId: 'nvd-api-key',
+                        variable: 'NVD_API_KEY'
+                    )
+                ]) {
+                    dependencyCheck(
+                        additionalArguments: "--format XML --format HTML --nvdApiKey=$NVD_API_KEY",
+                        odcInstallation: 'Default'
+                    )
                 }
             }
         }
 
+        /* ================= PUBLISH OWASP ================= */
+
         stage('Publish OWASP Report') {
             steps {
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                dependencyCheckPublisher(
+                    pattern: '**/dependency-check-report.xml'
+                )
             }
         }
 
@@ -142,24 +164,31 @@ pipeline {
 
         stage('Archive Reports') {
             steps {
-                archiveArtifacts artifacts: 'dependency-check-report.*', fingerprint: true
+                archiveArtifacts(
+                    artifacts: '**/dependency-check-report.*',
+                    fingerprint: true,
+                    allowEmptyArchive: true
+                )
             }
         }
-
     }
 
     /* ================= POST ================= */
 
     post {
+
         success {
-            echo 'SUCCESS: Build + Sonar + OWASP completed (No Tests)'
+            echo 'SUCCESS: Build + Tests + Sonar + OWASP completed'
         }
+
         unstable {
             echo 'UNSTABLE: Quality Gate issue or timeout'
         }
+
         failure {
             echo 'FAILED: Check logs'
         }
+
         always {
             echo 'Pipeline execution finished'
         }
