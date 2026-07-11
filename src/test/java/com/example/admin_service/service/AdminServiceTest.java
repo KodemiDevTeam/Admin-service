@@ -1,5 +1,7 @@
 package com.example.admin_service.service;
 
+import com.example.admin_service.dto.notification.BroadcastNotificationRequest;
+import com.example.admin_service.dto.notification.NotificationRequest;
 import com.example.admin_service.dto.request.*;
 import com.example.admin_service.dto.response.*;
 import com.example.admin_service.enums.AdminRole;
@@ -10,6 +12,7 @@ import com.example.admin_service.model.Admin;
 import com.example.admin_service.model.AdminRateLimit;
 import com.example.admin_service.repository.AdminRateLimitRepository;
 import com.example.admin_service.repository.AdminRepository;
+import com.example.admin_service.service.notification.NotificationPublisher;
 import com.example.admin_service.util.JwtUtil;
 import com.example.admin_service.util.PasswordValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +37,7 @@ class AdminServiceTest {
     private PasswordEncoder          passwordEncoder;
     private SecureRandom             secureRandom;
     private EmailService             emailService;
-    private NotificationClient      notificationClient;
+    private NotificationPublisher    notificationPublisher;
     private AdminRateLimitRepository adminRateLimitRepository;
 
     private static final String TOKEN = "Bearer token";
@@ -50,7 +53,7 @@ class AdminServiceTest {
         passwordEncoder          = mock(PasswordEncoder.class);
         secureRandom             = mock(SecureRandom.class);
         emailService             = mock(EmailService.class);
-        notificationClient       = mock(NotificationClient.class);
+        notificationPublisher    = mock(NotificationPublisher.class);
         adminRateLimitRepository = mock(AdminRateLimitRepository.class);
 
         // Mock secureRandom behaviour so generatePassword() doesn't throw null pointer exceptions
@@ -59,7 +62,7 @@ class AdminServiceTest {
         adminService = new AdminService(
                 userClient, authClient, courseClient, paymentClient,
                 adminRepository, jwtUtil, passwordEncoder, secureRandom,
-                emailService, notificationClient, adminRateLimitRepository
+                emailService, notificationPublisher, adminRateLimitRepository
         );
     }
 
@@ -349,7 +352,8 @@ class AdminServiceTest {
 
     @Test
     void processPayoutRequest_nullToken_throws() {
-        assertThrows(UnauthorizedPayoutAccessException.class, () -> adminService.processPayoutRequest(null, new ProcessPayoutRequest()));
+        assertThrows(UnauthorizedPayoutAccessException.class,
+                () -> adminService.processPayoutRequest(null, new ProcessPayoutRequest()));
     }
 
     @Test
@@ -360,7 +364,8 @@ class AdminServiceTest {
 
     @Test
     void processPayoutRequestByPath_invalidAction_throws() {
-        assertThrows(InvalidPayoutActionException.class, () -> adminService.processPayoutRequestByPath(TOKEN, "CANCEL", "p1", "ok"));
+        assertThrows(InvalidPayoutActionException.class,
+                () -> adminService.processPayoutRequestByPath(TOKEN, "CANCEL", "p1", "ok"));
     }
 
     // ── announcements & suspension ─────────────────────────────────────────
@@ -379,8 +384,10 @@ class AdminServiceTest {
         when(adminRateLimitRepository.getAdminRateLimit(anyString())).thenReturn(null);
 
         String result = adminService.broadcastAnnouncement(TOKEN, request);
+
         assertEquals("Broadcast sent successfully", result);
-        verify(notificationClient).broadcastNotification(eq(TOKEN), any());
+        // NotificationPublisher.publishBroadcast() is called internally — verify on the publisher
+        verify(notificationPublisher).publishBroadcast(any(BroadcastNotificationRequest.class));
         verify(adminRateLimitRepository).save(any());
     }
 
@@ -393,13 +400,14 @@ class AdminServiceTest {
         when(jwtUtil.extractUserId(TOKEN)).thenReturn("admin-1");
         when(adminRateLimitRepository.getAdminRateLimit(anyString())).thenReturn(rateLimit);
 
-        assertThrows(RuntimeException.class, () -> adminService.broadcastAnnouncement(TOKEN, request));
+        assertThrows(BroadcastException.class, () -> adminService.broadcastAnnouncement(TOKEN, request));
     }
 
     @Test
     void suspendUser_success() {
         String result = adminService.suspendUser(TOKEN, "user-1", "Spam");
         assertEquals("User suspended and notified successfully", result);
-        verify(notificationClient).sendInternalNotification(eq(TOKEN), any());
+        // NotificationPublisher.publish() is called internally — verify on the publisher
+        verify(notificationPublisher).publish(any(NotificationRequest.class));
     }
 }
