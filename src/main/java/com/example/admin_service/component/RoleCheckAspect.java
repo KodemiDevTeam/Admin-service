@@ -1,11 +1,11 @@
 package com.example.admin_service.component;
 
 import com.example.admin_service.exceptions.NoActiveRequestException;
+import com.example.admin_service.exceptions.ValueNotFoundException;
 import com.example.admin_service.util.JwtUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -21,8 +21,6 @@ import java.util.Arrays;
 @Component
 public class RoleCheckAspect {
 
-    @Value("${jwt.secret}")
-    private String secretKeyString;
     private final JwtUtil jwtUtil;
 
     public RoleCheckAspect(JwtUtil jwtUtil) {
@@ -48,9 +46,9 @@ public class RoleCheckAspect {
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
         }
-        String role = jwtUtil.extractRole(token);;
+        String role = jwtUtil.extractRole(token);
         if (role == null) {
-            throw new NullPointerException("Value Not Found.");
+            throw new ValueNotFoundException("Value Not Found.");
         }
         if (Arrays.asList(requiresRole.value()).contains(role)) {
             return joinPoint.proceed();

@@ -1,6 +1,7 @@
 package com.example.admin_service.component;
 
 import com.example.admin_service.exceptions.NoActiveRequestException;
+import com.example.admin_service.exceptions.ValueNotFoundException;
 import com.example.admin_service.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -98,7 +99,7 @@ class RoleCheckAspectTest {
         when(request.getHeader("Authorization")).thenReturn("Bearer token");
         when(jwtUtil.extractRole("Bearer token")).thenReturn(null);
 
-        assertThrows(NullPointerException.class, () ->
+        assertThrows(ValueNotFoundException.class, () ->
                 roleCheckAspect.checkRole(joinPoint, requiresRole)
         );
 

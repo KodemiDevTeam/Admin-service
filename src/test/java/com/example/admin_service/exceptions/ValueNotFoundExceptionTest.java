@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class NullPointerExceptionTest {
+class ValueNotFoundExceptionTest {
 
     @Test
     void testInvalidTokenException_withNullCause() {
@@ -18,14 +18,14 @@ class NullPointerExceptionTest {
     void testInvalidTokenException_withExpiredJwtException() {
         ExpiredJwtException cause = new ExpiredJwtException(null, null, "Expired");
         InvalidTokenException ex = new InvalidTokenException("Token expired", cause);
+
         assertEquals("Token expired", ex.getMessage());
-        assertNull(ex.getCause(), "Cause is not stored in current constructor");
+        assertSame(cause, ex.getCause(), "Cause should be stored in RuntimeException");
     }
 
     @Test
-    void testCustomNullPointerException() {
-        com.example.admin_service.exceptions.NullPointerException ex =
-                new com.example.admin_service.exceptions.NullPointerException("Null Pointer");
+    void testValueNotFoundException() {
+        ValueNotFoundException ex = new ValueNotFoundException("Null Pointer");
         assertEquals("Null Pointer", ex.getMessage());
         assertNull(ex.getCause());
     }

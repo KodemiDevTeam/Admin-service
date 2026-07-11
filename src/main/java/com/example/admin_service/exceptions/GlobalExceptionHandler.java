@@ -27,8 +27,8 @@ public class GlobalExceptionHandler {
         return response;
     }
 
-    @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity<Map<String, Object>> handleNullPointers(NullPointerException ex) {
+    @ExceptionHandler(ValueNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNullPointers(ValueNotFoundException ex) {
         log.warn("Null Value: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND));
@@ -87,6 +87,20 @@ public class GlobalExceptionHandler {
         log.warn("Invalid Payout Process: {}", ex.getMessage());
         return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(BroadcastException.class)
+    public ResponseEntity<Map<String, Object>> handleBroadcastException(BroadcastException ex) {
+        log.warn("Broadcast failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR));
+    }
+
+    @ExceptionHandler(UserSuspendException.class)
+    public ResponseEntity<Map<String, Object>> handleUserSuspendException(UserSuspendException ex) {
+        log.warn("User suspend failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(buildErrorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
     @ExceptionHandler({

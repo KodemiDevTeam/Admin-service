@@ -12,10 +12,10 @@ class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
-    // ===== NULL POINTER =====
+    // ===== VALUE NOT FOUND (formerly NullPointerException) =====
     @Test
     void testHandleNullPointers_fullCoverage() {
-        NullPointerException ex = new NullPointerException("Null error");
+        ValueNotFoundException ex = new ValueNotFoundException("Null error");
 
         ResponseEntity<Map<String, Object>> response =
                 handler.handleNullPointers(ex);

@@ -12,16 +12,15 @@ import com.example.admin_service.feign.CourseClient;
 import com.example.admin_service.feign.PaymentClient;
 import com.example.admin_service.feign.UserClient;
 import com.example.admin_service.service.notification.NotificationPublisher;
-import com.example.admin_service.dto.notification.NotificationRequest;
 import com.example.admin_service.dto.notification.BroadcastNotificationRequest;
-import com.example.admin_service.dto.notification.NotificationType;
+import com.example.admin_service.dto.notification.NotificationRequest;
 import com.example.admin_service.dto.notification.NotificationChannel;
+import com.example.admin_service.dto.notification.NotificationType;
 import com.example.admin_service.repository.AdminRateLimitRepository;
 import com.example.admin_service.repository.AdminRepository;
 import com.example.admin_service.model.Admin;
 import com.example.admin_service.util.JwtUtil;
 import com.example.admin_service.util.PasswordValidator;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -37,37 +36,31 @@ import java.util.*;
 @Slf4j
 @Service
 public class AdminService {
-    private static final String UPPER =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    private static final String LOWER =
-            "abcdefghijklmnopqrstuvwxyz";
-
-    private static final String DIGITS =
-            "0123456789";
-
-    private static final String SPECIAL =
-            "!@#$%^&*()_+-=[]{}";
-
-    private static final String ALL =
-            UPPER + LOWER + DIGITS + SPECIAL;
-
+    private static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String LOWER = "abcdefghijklmnopqrstuvwxyz";
+    private static final String DIGITS = "0123456789";
+    private static final String SPECIAL = "!@#$%^&*()_+-=[]{}";
+    private static final String ALL = UPPER + LOWER + DIGITS + SPECIAL;
 
     private final UserClient userClient;
     private final AuthClient authClient;
     private final CourseClient courseClient;
-    private  final PaymentClient paymentClient;
-    private  final AdminRepository adminRepository;
+    private final PaymentClient paymentClient;
+    private final AdminRepository adminRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
-    private  final SecureRandom random;
+    private final SecureRandom random;
     private final EmailService emailService;
     private final AdminRateLimitRepository adminRateLimitRepository;
-
     private final NotificationPublisher notificationPublisher;
 
     @Autowired
-    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, SecureRandom random, EmailService emailService, NotificationPublisher notificationPublisher, AdminRateLimitRepository adminRateLimitRepository) {
+    public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient,
+                        PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil,
+                        PasswordEncoder passwordEncoder, SecureRandom random, EmailService emailService,
+                        NotificationPublisher notificationPublisher,
+                        AdminRateLimitRepository adminRateLimitRepository) {
         this.userClient = userClient;
         this.authClient = authClient;
         this.courseClient = courseClient;
@@ -80,13 +73,14 @@ public class AdminService {
         this.notificationPublisher = notificationPublisher;
         this.adminRateLimitRepository = adminRateLimitRepository;
     }
+
     public Object getUser(String token, String id) {
         String role = authClient.geUserById(token, id).getRole().name();
-        if(Objects.equals(role, "TRAINER")){
+        if (Objects.equals(role, "TRAINER")) {
             return userClient.getTrainerById(token, id);
         } else if (Objects.equals(role, "SUPER_ADMIN")) {
-            return userClient.getAdmin( id);
-        }else{
+            return userClient.getAdmin(id);
+        } else {
             return userClient.getLearner(token, id);
         }
     }
@@ -103,7 +97,7 @@ public class AdminService {
             return response;
         }
 
-        com.example.admin_service.dto.request.TrainerReviewRequest req = new com.example.admin_service.dto.request.TrainerReviewRequest();
+        TrainerReviewRequest req = new TrainerReviewRequest();
         req.setAction(action);
         req.setRemarks(remarks);
         Object response = authClient.reviewTrainer(token, trainerId, req);
@@ -144,16 +138,14 @@ public class AdminService {
         return userClient.getAllTrainers(token);
     }
 
-
     @CacheEvict(value = "unverifiedCourses", allEntries = true)
     public Map<String, Object> courseModeration(String token, String courseId, String action, String remarks) {
         log.info("Calling course-service moderation: courseId={}, action={}", courseId, action);
-        
+
         if (courseId == null || courseId.isBlank()) {
-            // FETCH mode: return pending courses
             log.info("Fetching unverified courses for admin");
-            java.util.List<com.example.admin_service.dto.response.CourseResponseDTO> allCourses = courseClient.getAllCoursesAdmin(token);
-            java.util.List<com.example.admin_service.dto.response.CourseResponseDTO> pendingCourses = new java.util.ArrayList<>();
+            List<com.example.admin_service.dto.response.CourseResponseDTO> allCourses = courseClient.getAllCoursesAdmin(token);
+            List<com.example.admin_service.dto.response.CourseResponseDTO> pendingCourses = new ArrayList<>();
             if (allCourses != null) {
                 for (com.example.admin_service.dto.response.CourseResponseDTO c : allCourses) {
                     if (c != null && "PENDING".equalsIgnoreCase(c.getStatus())) {
@@ -161,29 +153,27 @@ public class AdminService {
                     }
                 }
             }
-            
             Map<String, Object> response = new HashMap<>();
             response.put("data", pendingCourses);
             response.put("message", "Pending courses fetched successfully");
             return response;
         }
-        
-        com.example.admin_service.dto.request.CourseModerationRequest request = new com.example.admin_service.dto.request.CourseModerationRequest();
+
+        CourseModerationRequest request = new CourseModerationRequest();
         request.setAction(action);
         request.setRemarks(remarks);
-        
+
         Map<String, Object> response = courseClient.reviewCourse(token, courseId, request);
         log.info("Course-service moderation response received for courseId={}", courseId);
         return response;
     }
 
-
-
-    public Object login(@Valid AdminLoginDTO request){
+    // Task #6: removed @Valid — validation belongs in the controller layer, not the service
+    public Object login(AdminLoginDTO request) {
         String email = request.getEmail();
         Admin admin = adminRepository.findByEmail(email);
 
-        if(admin == null){
+        if (admin == null) {
             log.warn("Login failed – not found: {}", email);
             throw new AdminNotFoundException("Sub-Admin not Found.");
         }
@@ -196,37 +186,37 @@ public class AdminService {
         adminDto.setEmail(email);
         adminDto.setAdminRole(admin.getAdminRole());
         adminDto.setUsername(admin.getUsername());
-        Object object =  authClient.adminLogin(adminDto);
-        if(admin.isPending()){
+        Object object = authClient.adminLogin(adminDto);
+        if (admin.isPending()) {
             return new Response<>(false, "Admin Pending.", object);
-        }else {
+        } else {
             return object;
         }
     }
 
     public String subAdminCreate(String token, SubAdminRequest request) {
+        // Task #8: password is already a String — no need for String.valueOf() or .toString()
         String password = generatePassword();
-
 
         Admin admin = new Admin();
         admin.setAdminId(UUID.randomUUID().toString());
         admin.setEmail(request.getEmail());
-        PasswordValidator.validate(String.valueOf(password));
-        String hashedPassword = BCrypt.hashpw(password.toString(), BCrypt.gensalt(12));
+        PasswordValidator.validate(password);
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
         admin.setPassword(hashedPassword);
         admin.setUsername(request.getUsername());
         admin.setAdminRole(request.getAdminRole());
         admin.setPending(true);
-        emailService.sendOEmail(request.getEmail(),password.toString(), request.getUsername() );
+        emailService.sendOEmail(request.getEmail(), password, request.getUsername());
         adminRepository.save(admin);
         return "Sub Admin Created for Role:" + request.getAdminRole().name();
     }
 
-    public String setSubAdmin(SubAdminDetailsDTO request, String token){
+    public String setSubAdmin(SubAdminDetailsDTO request, String token) {
         String adminId = jwtUtil.extractUserId(token);
         Admin admin = adminRepository.findById(adminId);
-        if(!admin.isPending()){
-            return  "SubAdmin Already Updated.";
+        if (!admin.isPending()) {
+            return "SubAdmin Already Updated.";
         }
         admin.setUsername(request.getUsername());
         PasswordValidator.validate(request.getPassword());
@@ -236,13 +226,13 @@ public class AdminService {
         adminRepository.save(admin);
         return "Username Set.";
     }
-    public String changePassword(String password, String token){
+
+    public String changePassword(String password, String token) {
         String role = jwtUtil.extractRole(token);
         Admin admin = adminRepository.findByRole(AdminRole.valueOf(role));
-        if(admin == null){
+        if (admin == null) {
             throw new AdminNotFoundException("Admin Not Found.");
         }
-
         PasswordValidator.validate(password);
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
         admin.setPassword(hashedPassword);
@@ -256,29 +246,29 @@ public class AdminService {
             log.info("Calling Payment service for the response..");
             return paymentClient.getAllPayouts(token);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            // Task #3: replaced ex.printStackTrace() with log.error()
+            log.error("Failed to fetch pending payouts", ex);
             throw new FetchPendingPayoutException("Failed to fetch proccessed payouts");
         }
     }
 
     @Cacheable(value = "pendingPayouts")
-    public TransactionHistoryResponse getAllTransactionHistory(){
-        try{
-            log.info("Calling Paymnet Service for the response...");
+    public TransactionHistoryResponse getAllTransactionHistory() {
+        try {
+            log.info("Calling Payment Service for the response...");
             return paymentClient.getTransactionHistory();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            // Task #3: replaced ex.printStackTrace() with log.error()
+            log.error("Failed to fetch transaction history", ex);
             throw new FetchPendingPayoutException("Failed to fetch all transactions.");
         }
     }
-
 
     @CacheEvict(value = "pendingPayouts", allEntries = true)
     public String processPayoutRequest(String token, ProcessPayoutRequest request) {
         if (token == null || token.isBlank()) {
             throw new UnauthorizedPayoutAccessException("Invalid token");
         }
-
         try {
             return paymentClient.processPayoutRequest(request, token);
         } catch (Exception ex) {
@@ -291,58 +281,39 @@ public class AdminService {
         if (!action.equalsIgnoreCase("APPROVE") && !action.equalsIgnoreCase("REJECT") && !action.equalsIgnoreCase("HOLD")) {
             throw new InvalidPayoutActionException("Invalid action: " + action);
         }
-
         try {
             return paymentClient.processPayoutRequestByPath(token, action, payoutId, remarks);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            // Task #3: replaced ex.printStackTrace() with log.error()
+            log.error("Error while calling payment service", ex);
             throw new PaymentClientException("Error while calling payment service");
         }
     }
-    public String generatePassword() {
 
+    public String generatePassword() {
         StringBuilder password = new StringBuilder();
 
-        // Ensure all required character types exist
-        password.append(
-                UPPER.charAt(random.nextInt(UPPER.length()))
-        );
+        // Ensure all required character types are present
+        password.append(UPPER.charAt(random.nextInt(UPPER.length())));
+        password.append(LOWER.charAt(random.nextInt(LOWER.length())));
+        password.append(DIGITS.charAt(random.nextInt(DIGITS.length())));
+        password.append(SPECIAL.charAt(random.nextInt(SPECIAL.length())));
 
-        password.append(
-                LOWER.charAt(random.nextInt(LOWER.length()))
-        );
-
-        password.append(
-                DIGITS.charAt(random.nextInt(DIGITS.length()))
-        );
-
-        password.append(
-                SPECIAL.charAt(random.nextInt(SPECIAL.length()))
-        );
-
-        // Remaining characters
+        // Fill remaining characters
         for (int i = 4; i < 8; i++) {
-
-            int index = random.nextInt(ALL.length());
-
-            password.append(ALL.charAt(index));
+            password.append(ALL.charAt(random.nextInt(ALL.length())));
         }
 
-        // Shuffle password characters
+        // Task #5: removed redundant null check — StringBuilder is never null
         List<Character> chars = new ArrayList<>();
-        if (password != null) {
-            for (int i = 0; i < password.length(); i++) {
-                chars.add(password.charAt(i));
-            }
+        for (int i = 0; i < password.length(); i++) {
+            chars.add(password.charAt(i));
         }
 
-        List<Character> shuffled = new ArrayList<>(chars);
-
-        Collections.shuffle(shuffled);
+        Collections.shuffle(chars);
 
         StringBuilder finalPassword = new StringBuilder();
-
-        for (Character c : shuffled) {
+        for (Character c : chars) {
             finalPassword.append(c);
         }
 
@@ -353,7 +324,6 @@ public class AdminService {
         String role = jwtUtil.extractRole(token);
         String adminId = jwtUtil.extractUserId(token);
 
-        // Rate Limiting
         String today = java.time.LocalDate.now().toString();
         String rateLimitKey = adminId + "_" + today;
         com.example.admin_service.model.AdminRateLimit rateLimit = adminRateLimitRepository.getAdminRateLimit(rateLimitKey);
@@ -365,7 +335,8 @@ public class AdminService {
         }
 
         if (rateLimit.getBroadcastCount() >= 5) {
-            throw new RuntimeException("Rate limit exceeded: Max 5 broadcasts per day allowed.");
+            // Task #7: replaced raw RuntimeException with specific BroadcastException
+            throw new BroadcastException("Rate limit exceeded: Max 5 broadcasts per day allowed.");
         }
 
         try {
@@ -374,14 +345,15 @@ public class AdminService {
                 finalChannels.remove("SMS");
             }
             if (finalChannels.contains("SMS") && !"SUPER_ADMIN".equals(role)) {
-                throw new RuntimeException("Only SUPER_ADMIN can send SMS broadcasts");
+                // Task #7: replaced raw RuntimeException with specific BroadcastException
+                throw new BroadcastException("Only SUPER_ADMIN can send SMS broadcasts");
             }
             if (!finalChannels.contains("IN_APP")) {
                 finalChannels.add("IN_APP");
             }
 
             List<NotificationChannel> channels = new ArrayList<>();
-            for(String ch : finalChannels) {
+            for (String ch : finalChannels) {
                 channels.add(NotificationChannel.valueOf(ch));
             }
 
@@ -392,27 +364,28 @@ public class AdminService {
                     .channels(channels)
                     .targetRole(request.getTargetRole() != null && !request.getTargetRole().equals("ALL")
                             ? request.getTargetRole() : null)
-                    .sendMode(request.getTargetRole() != null && !request.getTargetRole().equals("ALL") ? "ROLE_BASED" : "ALL_USERS")
-                    .referenceId(java.util.UUID.randomUUID().toString())
+                    .sendMode(request.getTargetRole() != null && !request.getTargetRole().equals("ALL")
+                            ? "ROLE_BASED" : "ALL_USERS")
+                    .referenceId(UUID.randomUUID().toString())
                     .referenceType("BROADCAST")
                     .build();
             notificationPublisher.publishBroadcast(notif);
 
-            // Increment rate limit
             rateLimit.setBroadcastCount(rateLimit.getBroadcastCount() + 1);
             adminRateLimitRepository.save(rateLimit);
 
             return "Broadcast sent successfully";
+        } catch (BroadcastException ex) {
+            throw ex;
         } catch (Exception ex) {
             log.error("Failed to send broadcast", ex);
-            throw new RuntimeException("Failed to send broadcast", ex);
+            // Task #7: replaced raw RuntimeException with specific BroadcastException
+            throw new BroadcastException("Failed to send broadcast", ex);
         }
     }
 
     public String suspendUser(String token, String userId, String reason) {
         try {
-            // Assume the actual suspension logic is handled somewhere or we just send the notification
-            // if we don't have the external client for it right now.
             NotificationRequest notif = NotificationRequest.builder()
                     .userId(userId)
                     .title("Account Suspended")
@@ -426,7 +399,8 @@ public class AdminService {
             return "User suspended and notified successfully";
         } catch (Exception ex) {
             log.error("Failed to notify suspended user", ex);
-            throw new RuntimeException("Failed to notify user", ex);
+            // Task #7: replaced raw RuntimeException with specific UserSuspendException
+            throw new UserSuspendException("Failed to notify user", ex);
         }
     }
 }
