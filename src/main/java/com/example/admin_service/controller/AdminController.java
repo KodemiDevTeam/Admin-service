@@ -26,7 +26,7 @@ public class AdminController {
     @RequiresRole("SUPER_ADMIN")
     @PostMapping("/create")
     public ResponseEntity<String> subAdmin(@RequestHeader("Authorization") String token, @RequestBody SubAdminRequest request){
-        return ResponseEntity.ok(adminService.subAdminCreate(token, request));
+        return ResponseEntity.ok(adminService.subAdminCreate(request));
     }
 
     @PostMapping("/update")
@@ -108,7 +108,7 @@ public class AdminController {
             @RequestHeader("Authorization") String token,
             @PathVariable String userId,
             @RequestParam String reason) {
-        return ResponseEntity.ok(adminService.suspendUser(token, userId, reason));
+        return ResponseEntity.ok(adminService.suspendUser(userId, reason));
     }
 
     // --- Backwards Compatibility Endpoints ---

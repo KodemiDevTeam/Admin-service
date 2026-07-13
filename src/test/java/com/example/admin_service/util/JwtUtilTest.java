@@ -15,7 +15,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class JwtUtilTest {
+class JwtUtilTest {
 
     private JwtUtil jwtUtil;
     private final String SECRET = "my-32-character-ultra-secure-and-ultra-long-secret";

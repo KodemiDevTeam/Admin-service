@@ -194,7 +194,7 @@ public class AdminService {
         }
     }
 
-    public String subAdminCreate(String token, SubAdminRequest request) {
+    public String subAdminCreate(SubAdminRequest request) {
         // Task #8: password is already a String — no need for String.valueOf() or .toString()
         String password = generatePassword();
 
@@ -384,7 +384,7 @@ public class AdminService {
         }
     }
 
-    public String suspendUser(String token, String userId, String reason) {
+    public String suspendUser(String userId, String reason) {
         try {
             NotificationRequest notif = NotificationRequest.builder()
                     .userId(userId)

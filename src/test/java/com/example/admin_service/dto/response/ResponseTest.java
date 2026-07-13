@@ -3,7 +3,7 @@ package com.example.admin_service.dto.response;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ResponseTest {
+class ResponseTest {
 
     @Test
     void testResponse() {

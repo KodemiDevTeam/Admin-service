@@ -4,7 +4,6 @@ import com.example.admin_service.dto.request.PayoutRequest;
 import com.example.admin_service.dto.request.ProcessPayoutRequest;
 import com.example.admin_service.dto.response.TransactionHistoryResponse;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.github.resilience4j.retry.annotation.Retry;
 import java.util.List;

@@ -4,8 +4,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
-
-public class TrainerResponseDTOTest {
+class TrainerResponseDTOTest {
 
     @Test
     void testTrainerResponseDTO() {

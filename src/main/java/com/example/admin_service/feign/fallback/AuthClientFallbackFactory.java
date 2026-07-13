@@ -13,31 +13,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class AuthClientFallbackFactory implements FallbackFactory<AuthClient> {
+    private static final String AUTH_SERVICE_UNAVAILABLE =
+            "Auth service is currently unavailable.";
+
     @Override
     public AuthClient create(Throwable cause) {
         return new AuthClient() {
             @Override
             public ResponseEntity<Object> reviewTrainer(String token, String userId, TrainerReviewRequest request) {
                 log.error("AuthClient reviewTrainer failed: {}", cause.getMessage(), cause);
-                throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
+                throw new DownstreamServiceException(AUTH_SERVICE_UNAVAILABLE, cause);
             }
 
             @Override
             public ResponseEntity<Object> checkStatus(String email) {
                 log.error("AuthClient checkStatus failed: {}", cause.getMessage(), cause);
-                throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
+                throw new DownstreamServiceException(AUTH_SERVICE_UNAVAILABLE, cause);
             }
 
             @Override
             public Object adminLogin(AdminLoginRequest adminResponseDTO) {
                 log.error("AuthClient adminLogin failed: {}", cause.getMessage(), cause);
-                throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
+                throw new DownstreamServiceException(AUTH_SERVICE_UNAVAILABLE, cause);
             }
 
             @Override
             public UserDTO geUserById(String token, String userId) {
                 log.error("AuthClient geUserById failed: {}", cause.getMessage(), cause);
-                throw new DownstreamServiceException("Auth service is currently unavailable.", cause);
+                throw new DownstreamServiceException(AUTH_SERVICE_UNAVAILABLE, cause);
             }
         };
     }

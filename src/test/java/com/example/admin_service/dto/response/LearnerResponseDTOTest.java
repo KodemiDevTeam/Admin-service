@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class LearnerResponseDTOTest {
+class LearnerResponseDTOTest {
 
     @Test
     void testLearnerResponseDTO() {

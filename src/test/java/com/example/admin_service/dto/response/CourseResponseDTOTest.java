@@ -4,8 +4,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Date;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
-
-public class CourseResponseDTOTest {
+class CourseResponseDTOTest {
 
     @Test
     void testGettersSettersAndBuilder() {
@@ -43,35 +42,38 @@ public class CourseResponseDTOTest {
                 .lessons(List.of(lesson))
                 .build();
 
-        assertEquals("c1", dto.getCourseId());
-        assertEquals("creator1", dto.getCreatorId());
-        assertEquals("John Doe", dto.getCreatorName());
-        assertEquals("cat1", dto.getCategoryId());
-        assertEquals("Programming", dto.getCategoryName());
-        assertEquals("PENDING", dto.getStatus());
-        assertFalse(dto.getIsVerified());
-        assertEquals("Spring Boot Guide", dto.getTitle());
-        assertEquals("Learn Spring Boot", dto.getDescription());
-        assertEquals("English", dto.getLanguage());
-        assertEquals("Beginner", dto.getSkillLevel());
-        assertEquals("https://thumb.url", dto.getThumbnailUrl());
-        assertEquals("https://video.url", dto.getDemoVideoUrl());
-        assertEquals(99.99, dto.getPrice());
-        assertEquals(10, dto.getLessonCount());
-        assertEquals("5 hours", dto.getDurationLabel());
-        assertEquals(4.8, dto.getAverageRating());
-        assertEquals(20, dto.getTotalReviews());
-        assertEquals("Welcome!", dto.getWelcomeMessage());
-        assertEquals("Instructor", dto.getInstructorName());
-        assertEquals("photo", dto.getInstructorPhoto());
-        assertEquals("Title", dto.getInstructorTitle());
-        assertEquals("Bio", dto.getInstructorBio());
-        assertEquals("Free", dto.getCourseType());
-        assertEquals(now, dto.getCreatedAt());
-        assertEquals(now, dto.getUpdatedAt());
-        assertNotNull(dto.getLessons());
+        assertAll(
+                () -> assertEquals("c1", dto.getCourseId()),
+                () -> assertEquals("creator1", dto.getCreatorId()),
+                () -> assertEquals("John Doe", dto.getCreatorName()),
+                () -> assertEquals("cat1", dto.getCategoryId()),
+                () -> assertEquals("Programming", dto.getCategoryName()),
+                () -> assertEquals("PENDING", dto.getStatus()),
+                () -> assertFalse(dto.getIsVerified()),
+                () -> assertEquals("Spring Boot Guide", dto.getTitle()),
+                () -> assertEquals("Learn Spring Boot", dto.getDescription()),
+                () -> assertEquals("English", dto.getLanguage()),
+                () -> assertEquals("Beginner", dto.getSkillLevel()),
+                () -> assertEquals("https://thumb.url", dto.getThumbnailUrl()),
+                () -> assertEquals("https://video.url", dto.getDemoVideoUrl()),
+                () -> assertEquals(99.99, dto.getPrice()),
+                () -> assertEquals(10, dto.getLessonCount()),
+                () -> assertEquals("5 hours", dto.getDurationLabel()),
+                () -> assertEquals(4.8, dto.getAverageRating()),
+                () -> assertEquals(20, dto.getTotalReviews()),
+                () -> assertEquals("Welcome!", dto.getWelcomeMessage()),
+                () -> assertEquals("Instructor", dto.getInstructorName()),
+                () -> assertEquals("photo", dto.getInstructorPhoto()),
+                () -> assertEquals("Title", dto.getInstructorTitle()),
+                () -> assertEquals("Bio", dto.getInstructorBio()),
+                () -> assertEquals("Free", dto.getCourseType()),
+                () -> assertEquals(now, dto.getCreatedAt()),
+                () -> assertEquals(now, dto.getUpdatedAt()),
+                () -> assertNotNull(dto.getLessons())
+        );
 
         dto.maskVideoContent();
+
         assertNull(dto.getLessons().get(0).getVideoKey());
     }
 }

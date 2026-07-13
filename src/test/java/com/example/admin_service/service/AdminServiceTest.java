@@ -246,7 +246,7 @@ class AdminServiceTest {
             request.setUsername("sub1");
             request.setAdminRole(AdminRole.USER_ADMIN);
 
-            String result = adminService.subAdminCreate(TOKEN, request);
+            String result = adminService.subAdminCreate(request);
 
             assertTrue(result.contains("Sub Admin Created"));
             assertTrue(result.contains("USER_ADMIN"));
@@ -342,25 +342,29 @@ class AdminServiceTest {
         assertThrows(FetchPendingPayoutException.class, () -> adminService.getAllTransactionHistory());
     }
 
-    @Test
-    void processPayoutRequest_success() {
-        ProcessPayoutRequest request = new ProcessPayoutRequest();
-        when(paymentClient.processPayoutRequest(request, TOKEN)).thenReturn("Success");
+        @Test
+        void processPayoutRequest_success() {
+            ProcessPayoutRequest request = new ProcessPayoutRequest();
+            when(paymentClient.processPayoutRequest(request, TOKEN)).thenReturn("Success");
 
-        assertEquals("Success", adminService.processPayoutRequest(TOKEN, request));
-    }
+            assertEquals("Success", adminService.processPayoutRequest(TOKEN, request));
+        }
 
-    @Test
-    void processPayoutRequest_nullToken_throws() {
-        assertThrows(UnauthorizedPayoutAccessException.class,
-                () -> adminService.processPayoutRequest(null, new ProcessPayoutRequest()));
-    }
+        @Test
+        void processPayoutRequest_nullToken_throws() {
+            ProcessPayoutRequest request = new ProcessPayoutRequest();
 
-    @Test
-    void processPayoutRequestByPath_success() {
-        when(paymentClient.processPayoutRequestByPath(TOKEN, "APPROVE", "p1", "ok")).thenReturn("Success");
-        assertEquals("Success", adminService.processPayoutRequestByPath(TOKEN, "APPROVE", "p1", "ok"));
-    }
+            assertThrows(
+                    UnauthorizedPayoutAccessException.class,
+                    () -> adminService.processPayoutRequest(null, request)
+            );
+        }
+
+        @Test
+        void processPayoutRequestByPath_success() {
+            when(paymentClient.processPayoutRequestByPath(TOKEN, "APPROVE", "p1", "ok")).thenReturn("Success");
+            assertEquals("Success", adminService.processPayoutRequestByPath(TOKEN, "APPROVE", "p1", "ok"));
+        }
 
     @Test
     void processPayoutRequestByPath_invalidAction_throws() {
@@ -405,7 +409,7 @@ class AdminServiceTest {
 
     @Test
     void suspendUser_success() {
-        String result = adminService.suspendUser(TOKEN, "user-1", "Spam");
+        String result = adminService.suspendUser("user-1", "Spam");
         assertEquals("User suspended and notified successfully", result);
         // NotificationPublisher.publish() is called internally — verify on the publisher
         verify(notificationPublisher).publish(any(NotificationRequest.class));
