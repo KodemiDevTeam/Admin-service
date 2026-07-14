@@ -3,18 +3,14 @@ package com.example.admin_service.service;
 import com.example.admin_service.dto.notification.BroadcastNotificationRequest;
 import com.example.admin_service.dto.notification.NotificationRequest;
 import com.example.admin_service.dto.request.*;
-import com.example.admin_service.dto.response.TrainerResponseDTO;
 import com.example.admin_service.enums.AdminRole;
-import com.example.admin_service.enums.Role;
 import com.example.admin_service.exceptions.*;
 import com.example.admin_service.feign.*;
-import com.example.admin_service.model.Admin;
 import com.example.admin_service.model.AdminRateLimit;
 import com.example.admin_service.repository.AdminRateLimitRepository;
 import com.example.admin_service.repository.AdminRepository;
 import com.example.admin_service.service.notification.NotificationPublisher;
 import com.example.admin_service.util.JwtUtil;
-import com.example.admin_service.util.PasswordValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -132,10 +128,11 @@ class AdminServiceExtraTest {
 
     @Test
     void processPayoutRequest_blankToken_throwsUnauthorized() {
-        assertThrows(UnauthorizedPayoutAccessException.class,
-                () -> adminService.processPayoutRequest("   ", new ProcessPayoutRequest()));
-    }
+        ProcessPayoutRequest request = new ProcessPayoutRequest();
 
+        assertThrows(UnauthorizedPayoutAccessException.class,
+                () -> adminService.processPayoutRequest("   ", request));
+    }
     // ── processPayoutRequestByPath failure path ────────────────────────────
 
     @Test
@@ -166,36 +163,22 @@ class AdminServiceExtraTest {
                 () -> adminService.suspendUser("user-1", "Spam"));
     }
 
-    // ── broadcastAnnouncement non-urgent removes SMS ───────────────────────
+    // ── broadcastAnnouncement branches ────────────────────────────────────
 
     @Test
     void broadcastAnnouncement_notUrgent_removesSMS() {
-        AdminBroadcastRequest request = new AdminBroadcastRequest();
-        request.setTitle("Test");
-        request.setMessage("Msg");
-        request.setTargetRole("ALL");
-        request.setUrgent(false);
-        request.setChannels(new ArrayList<>(List.of("EMAIL", "SMS")));
-
+        AdminBroadcastRequest request = buildBroadcastRequest("ALL", false, "EMAIL", "SMS");
         when(jwtUtil.extractRole(TOKEN)).thenReturn("SUPER_ADMIN");
         when(jwtUtil.extractUserId(TOKEN)).thenReturn("admin-1");
         when(adminRateLimitRepository.getAdminRateLimit(anyString())).thenReturn(null);
 
-        String result = adminService.broadcastAnnouncement(TOKEN, request);
-
-        assertEquals("Broadcast sent successfully", result);
+        assertEquals("Broadcast sent successfully", adminService.broadcastAnnouncement(TOKEN, request));
         verify(notificationPublisher).publishBroadcast(any(BroadcastNotificationRequest.class));
     }
 
     @Test
     void broadcastAnnouncement_smsNotSuperAdmin_throwsBroadcastException() {
-        AdminBroadcastRequest request = new AdminBroadcastRequest();
-        request.setTitle("Test");
-        request.setMessage("Msg");
-        request.setTargetRole("ALL");
-        request.setUrgent(true);
-        request.setChannels(new ArrayList<>(List.of("EMAIL", "SMS")));
-
+        AdminBroadcastRequest request = buildBroadcastRequest("ALL", true, "EMAIL", "SMS");
         when(jwtUtil.extractRole(TOKEN)).thenReturn("PAYMENT_ADMIN");
         when(jwtUtil.extractUserId(TOKEN)).thenReturn("admin-1");
         when(adminRateLimitRepository.getAdminRateLimit(anyString())).thenReturn(null);
@@ -206,54 +189,32 @@ class AdminServiceExtraTest {
 
     @Test
     void broadcastAnnouncement_existingRateLimit_incrementsCount() {
-        AdminBroadcastRequest request = new AdminBroadcastRequest();
-        request.setTitle("Test");
-        request.setMessage("Msg");
-        request.setTargetRole("ALL");
-        request.setUrgent(false);
-        request.setChannels(new ArrayList<>(List.of("EMAIL")));
-
+        AdminBroadcastRequest request = buildBroadcastRequest("ALL", false, "EMAIL");
         AdminRateLimit rateLimit = new AdminRateLimit();
         rateLimit.setBroadcastCount(2);
-
         when(jwtUtil.extractRole(TOKEN)).thenReturn("SUPER_ADMIN");
         when(jwtUtil.extractUserId(TOKEN)).thenReturn("admin-1");
         when(adminRateLimitRepository.getAdminRateLimit(anyString())).thenReturn(rateLimit);
 
-        String result = adminService.broadcastAnnouncement(TOKEN, request);
-
-        assertEquals("Broadcast sent successfully", result);
+        assertEquals("Broadcast sent successfully", adminService.broadcastAnnouncement(TOKEN, request));
         assertEquals(3, rateLimit.getBroadcastCount());
     }
 
     @Test
     void broadcastAnnouncement_withSpecificTargetRole_usesRoleBasedMode() {
-        AdminBroadcastRequest request = new AdminBroadcastRequest();
-        request.setTitle("Test");
-        request.setMessage("Msg");
-        request.setTargetRole("TRAINER");
-        request.setUrgent(false);
-        request.setChannels(new ArrayList<>(List.of("EMAIL")));
-
+        AdminBroadcastRequest request = buildBroadcastRequest("TRAINER", false, "EMAIL");
         when(jwtUtil.extractRole(TOKEN)).thenReturn("SUPER_ADMIN");
         when(jwtUtil.extractUserId(TOKEN)).thenReturn("admin-1");
         when(adminRateLimitRepository.getAdminRateLimit(anyString())).thenReturn(null);
 
-        String result = adminService.broadcastAnnouncement(TOKEN, request);
-
-        assertEquals("Broadcast sent successfully", result);
+        assertEquals("Broadcast sent successfully", adminService.broadcastAnnouncement(TOKEN, request));
         verify(notificationPublisher).publishBroadcast(any(BroadcastNotificationRequest.class));
     }
 
     @Test
     void broadcastAnnouncement_publisherThrows_throwsBroadcastException() {
-        AdminBroadcastRequest request = new AdminBroadcastRequest();
-        request.setTitle("Test");
-        request.setMessage("Msg");
-        request.setTargetRole("ALL");
-        request.setUrgent(false);
-        request.setChannels(new ArrayList<>(List.of("EMAIL")));
-
+        // Sonar fix: setup stubs BEFORE lambda, then call single method in lambda
+        AdminBroadcastRequest request = buildBroadcastRequest("ALL", false, "EMAIL");
         when(jwtUtil.extractRole(TOKEN)).thenReturn("SUPER_ADMIN");
         when(jwtUtil.extractUserId(TOKEN)).thenReturn("admin-1");
         when(adminRateLimitRepository.getAdminRateLimit(anyString())).thenReturn(null);
@@ -263,11 +224,10 @@ class AdminServiceExtraTest {
                 () -> adminService.broadcastAnnouncement(TOKEN, request));
     }
 
-    // ── generatePassword coverage ──────────────────────────────────────────
+    // ── generatePassword ──────────────────────────────────────────────────
 
     @Test
     void generatePassword_returnsEightCharPassword() {
-        // Use real SecureRandom for this test
         SecureRandom realRandom = new SecureRandom();
         AdminService svc = new AdminService(
                 userClient, authClient, courseClient, paymentClient,
@@ -279,7 +239,7 @@ class AdminServiceExtraTest {
         assertEquals(8, pwd.length());
     }
 
-    // ── courseModeration allCourses null ────────────────────────────────────
+    // ── courseModeration allCourses null ──────────────────────────────────
 
     @Test
     void courseModeration_nullCoursesList_returnsEmptyData() {
@@ -289,5 +249,17 @@ class AdminServiceExtraTest {
         assertNotNull(result);
         List<?> data = (List<?>) result.get("data");
         assertTrue(data.isEmpty());
+    }
+
+    // ── helper ────────────────────────────────────────────────────────────
+
+    private AdminBroadcastRequest buildBroadcastRequest(String targetRole, boolean urgent, String... channels) {
+        AdminBroadcastRequest request = new AdminBroadcastRequest();
+        request.setTitle("Test");
+        request.setMessage("Msg");
+        request.setTargetRole(targetRole);
+        request.setUrgent(urgent);
+        request.setChannels(new ArrayList<>(List.of(channels)));
+        return request;
     }
 }

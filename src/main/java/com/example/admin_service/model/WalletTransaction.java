@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode
+@ToString
 public class WalletTransaction {
 
     @DynamoDBHashKey(attributeName = "transactionId")
@@ -56,6 +58,4 @@ public class WalletTransaction {
 
     @DynamoDBAttribute
     private BigDecimal balanceAfter;
-
-
 }

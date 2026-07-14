@@ -75,6 +75,9 @@ class NotificationPublisherTest {
                 .thenThrow(new RuntimeException("feign error"));
 
         assertDoesNotThrow(() -> publisher.publish(req));
+
+        verify(notificationClient)
+                .sendInternalNotification(eq("test-key"), any(NotificationRequest.class));
     }
 
     @Test
@@ -98,6 +101,9 @@ class NotificationPublisherTest {
                 .thenThrow(new RuntimeException("feign error"));
 
         assertDoesNotThrow(() -> publisher.publishBroadcast(req));
+
+        verify(notificationClient)
+                .broadcastNotification(eq("test-key"), any(BroadcastNotificationRequest.class));
     }
 
     @Test
@@ -107,17 +113,19 @@ class NotificationPublisherTest {
         when(notificationClient.sendInternalNotification(anyString(), any()))
                 .thenReturn(Map.of("status", "success"));
 
-        publisher.publishToUsers(List.of("u1", "u2", "u3"), req);
+        assertDoesNotThrow(() ->
+                publisher.publishToUsers(List.of("u1", "u2", "u3"), req));
 
         verify(notificationClient, times(3))
-                .sendInternalNotification(eq("test-key"), any());
+                .sendInternalNotification(eq("test-key"), any(NotificationRequest.class));
     }
 
     @Test
     void publishToUsers_emptyList_doesNothing() {
         NotificationRequest req = buildRequest();
 
-        assertDoesNotThrow(() -> publisher.publishToUsers(List.of(), req));
+        assertDoesNotThrow(() ->
+                publisher.publishToUsers(List.of(), req));
 
         verify(notificationClient, never())
                 .sendInternalNotification(anyString(), any());
@@ -127,7 +135,8 @@ class NotificationPublisherTest {
     void publishToUsers_nullList_doesNothing() {
         NotificationRequest req = buildRequest();
 
-        assertDoesNotThrow(() -> publisher.publishToUsers(null, req));
+        assertDoesNotThrow(() ->
+                publisher.publishToUsers(null, req));
 
         verify(notificationClient, never())
                 .sendInternalNotification(anyString(), any());
@@ -140,6 +149,10 @@ class NotificationPublisherTest {
         when(notificationClient.sendInternalNotification(anyString(), any()))
                 .thenThrow(new RuntimeException("error"));
 
-        assertDoesNotThrow(() -> publisher.publishToUsers(List.of("u1", "u2"), req));
+        assertDoesNotThrow(() ->
+                publisher.publishToUsers(List.of("u1", "u2"), req));
+
+        verify(notificationClient, times(2))
+                .sendInternalNotification(eq("test-key"), any(NotificationRequest.class));
     }
 }
