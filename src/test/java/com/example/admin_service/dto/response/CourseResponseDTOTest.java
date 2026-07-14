@@ -2,9 +2,6 @@ package com.example.admin_service.dto.response;
 
 import org.junit.jupiter.api.Test;
 import java.util.Date;
-import org.junit.jupiter.api.Test;
-
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
