@@ -10,8 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class NotificationPublisherTest {
@@ -50,56 +54,63 @@ class NotificationPublisherTest {
                 .build();
     }
 
-    // ── publish ────────────────────────────────────────────────────────────
-
     @Test
     void publish_success_callsNotificationClient() {
         NotificationRequest req = buildRequest();
-        doNothing().when(notificationClient).sendInternalNotification(anyString(), any());
+
+        when(notificationClient.sendInternalNotification(anyString(), any()))
+                .thenReturn(Map.of("status", "success"));
 
         assertDoesNotThrow(() -> publisher.publish(req));
-        verify(notificationClient).sendInternalNotification("test-key", req);
+
+        verify(notificationClient)
+                .sendInternalNotification("test-key", req);
     }
 
     @Test
     void publish_clientThrows_doesNotPropagate() {
         NotificationRequest req = buildRequest();
-        doThrow(new RuntimeException("feign error"))
-                .when(notificationClient).sendInternalNotification(anyString(), any());
+
+        when(notificationClient.sendInternalNotification(anyString(), any()))
+                .thenThrow(new RuntimeException("feign error"));
 
         assertDoesNotThrow(() -> publisher.publish(req));
     }
 
-    // ── publishBroadcast ───────────────────────────────────────────────────
-
     @Test
     void publishBroadcast_success_callsNotificationClient() {
         BroadcastNotificationRequest req = buildBroadcast();
-        doNothing().when(notificationClient).broadcastNotification(anyString(), any());
+
+        when(notificationClient.broadcastNotification(anyString(), any()))
+                .thenReturn(Map.of("status", "success"));
 
         assertDoesNotThrow(() -> publisher.publishBroadcast(req));
-        verify(notificationClient).broadcastNotification("test-key", req);
+
+        verify(notificationClient)
+                .broadcastNotification("test-key", req);
     }
 
     @Test
     void publishBroadcast_clientThrows_doesNotPropagate() {
         BroadcastNotificationRequest req = buildBroadcast();
-        doThrow(new RuntimeException("feign error"))
-                .when(notificationClient).broadcastNotification(anyString(), any());
+
+        when(notificationClient.broadcastNotification(anyString(), any()))
+                .thenThrow(new RuntimeException("feign error"));
 
         assertDoesNotThrow(() -> publisher.publishBroadcast(req));
     }
 
-    // ── publishToUsers ─────────────────────────────────────────────────────
-
     @Test
     void publishToUsers_multipleUsers_sendsToEach() {
         NotificationRequest req = buildRequest();
-        doNothing().when(notificationClient).sendInternalNotification(anyString(), any());
+
+        when(notificationClient.sendInternalNotification(anyString(), any()))
+                .thenReturn(Map.of("status", "success"));
 
         publisher.publishToUsers(List.of("u1", "u2", "u3"), req);
 
-        verify(notificationClient, times(3)).sendInternalNotification(eq("test-key"), any());
+        verify(notificationClient, times(3))
+                .sendInternalNotification(eq("test-key"), any());
     }
 
     @Test
@@ -107,7 +118,9 @@ class NotificationPublisherTest {
         NotificationRequest req = buildRequest();
 
         assertDoesNotThrow(() -> publisher.publishToUsers(List.of(), req));
-        verify(notificationClient, never()).sendInternalNotification(anyString(), any());
+
+        verify(notificationClient, never())
+                .sendInternalNotification(anyString(), any());
     }
 
     @Test
@@ -115,14 +128,17 @@ class NotificationPublisherTest {
         NotificationRequest req = buildRequest();
 
         assertDoesNotThrow(() -> publisher.publishToUsers(null, req));
-        verify(notificationClient, never()).sendInternalNotification(anyString(), any());
+
+        verify(notificationClient, never())
+                .sendInternalNotification(anyString(), any());
     }
 
     @Test
     void publishToUsers_oneUserThrows_continuesForOthers() {
         NotificationRequest req = buildRequest();
-        doThrow(new RuntimeException("error"))
-                .when(notificationClient).sendInternalNotification(anyString(), any());
+
+        when(notificationClient.sendInternalNotification(anyString(), any()))
+                .thenThrow(new RuntimeException("error"));
 
         assertDoesNotThrow(() -> publisher.publishToUsers(List.of("u1", "u2"), req));
     }
