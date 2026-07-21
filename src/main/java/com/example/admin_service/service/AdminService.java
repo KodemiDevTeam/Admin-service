@@ -115,7 +115,7 @@ public class AdminService {
                         .title("Trainer Application Approved")
                         .message("Congratulations! Your trainer application has been approved. You can now start creating courses.")
                         .type(NotificationType.TRAINER_VERIFIED)
-                        .channels(List.of(NotificationChannel.EMAIL))
+                        .channels(List.of(NotificationChannel.IN_APP, NotificationChannel.EMAIL))
                         .referenceId(trainerId)
                         .referenceType("USER")
                         .build();
@@ -126,7 +126,7 @@ public class AdminService {
                         .title("Trainer Application Rejected")
                         .message("We regret to inform you that your trainer application has been rejected. Reason: " + remarks)
                         .type(NotificationType.TRAINER_REJECTED)
-                        .channels(List.of(NotificationChannel.EMAIL))
+                        .channels(List.of(NotificationChannel.IN_APP, NotificationChannel.EMAIL))
                         .referenceId(trainerId)
                         .referenceType("USER")
                         .build();
