@@ -66,7 +66,6 @@ public class AdminService {
 
     private final NotificationPublisher notificationPublisher;
 
-    @Autowired
     public AdminService(UserClient userClient, AuthClient authClient, CourseClient courseClient, PaymentClient paymentClient, AdminRepository adminRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, SecureRandom random, EmailService emailService, NotificationPublisher notificationPublisher, AdminRateLimitRepository adminRateLimitRepository) {
         this.userClient = userClient;
         this.authClient = authClient;
