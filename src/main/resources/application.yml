@@ -1,16 +1,16 @@
 server:
-  port: ${SERVER_PORT:8551}
+  port: ${SERVER_PORT}
 
 spring:
   application:
     name: admin-service
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
     properties:
@@ -20,7 +20,7 @@ spring:
           starttls:
             enable: true
           ssl:
-            trust: ${MAIL_SMTP_SSL_TRUST:smtp.gmail.com}
+            trust: ${MAIL_SMTP_SSL_TRUST}
   cloud:
     openfeign:
       circuitbreaker:
@@ -41,6 +41,9 @@ dynamodb:
 
 cloud:
   aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
     region:
       static: ${AWS_REGION}
     stack:
