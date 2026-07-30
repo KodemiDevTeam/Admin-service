@@ -9,9 +9,8 @@ import com.example.admin_service.feign.*;
 import com.example.admin_service.model.Admin;
 import com.example.admin_service.model.AdminRateLimit;
 import com.example.admin_service.repository.AdminRateLimitRepository;
-import com.example.admin_service.repository.AdminRepository;
 import com.example.admin_service.util.JwtUtil;
-import com.example.admin_service.util.PasswordValidator;
+import com.example.admin_service.service.notification.NotificationPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,7 +33,7 @@ class AdminServiceTest {
     private PasswordEncoder          passwordEncoder;
     private SecureRandom             secureRandom;
     private EmailService             emailService;
-    private NotificationClient      notificationClient;
+    private NotificationPublisher   notificationPublisher;
     private AdminRateLimitRepository adminRateLimitRepository;
 
     private static final String TOKEN = "Bearer token";
@@ -50,7 +49,7 @@ class AdminServiceTest {
         passwordEncoder          = mock(PasswordEncoder.class);
         secureRandom             = mock(SecureRandom.class);
         emailService             = mock(EmailService.class);
-        notificationClient       = mock(NotificationClient.class);
+        notificationPublisher    = mock(NotificationPublisher.class);
         adminRateLimitRepository = mock(AdminRateLimitRepository.class);
 
         // Mock secureRandom behaviour so generatePassword() doesn't throw null pointer exceptions
@@ -59,7 +58,7 @@ class AdminServiceTest {
         adminService = new AdminService(
                 userClient, authClient, courseClient, paymentClient,
                 adminRepository, jwtUtil, passwordEncoder, secureRandom,
-                emailService, notificationClient, adminRateLimitRepository
+                emailService, notificationPublisher, adminRateLimitRepository
         );
     }
 

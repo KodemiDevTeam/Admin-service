@@ -99,13 +99,10 @@ public class AdminService {
             Map<String, Object> response = new HashMap<>();
             response.put("data", userClient.getAllPendingTrainers(token));
             response.put("message", "Pending trainers fetched successfully");
-            return response;
-        }
-
-        com.example.admin_service.dto.request.TrainerReviewRequest req = new com.example.admin_service.dto.request.TrainerReviewRequest();
-        req.setAction(action);
-        req.setRemarks(remarks);
-        Object response = authClient.reviewTrainer(token, trainerId, req);
+    @CacheEvict(value = "allTrainers", allEntries = true)
+    public Map<String, Object> reviewTrainerProfile(String token, String trainerId, String action, String remarks) {
+        log.info("Review trainer profile request | trainerId={} | action={}", trainerId, action);
+        Map<String, Object> response = userClient.reviewTrainerProfile(token, trainerId, action, remarks);
 
         try {
             if ("APPROVE".equalsIgnoreCase(action)) {
@@ -138,7 +135,7 @@ public class AdminService {
         return response;
     }
 
-    @Cacheable(value = "allTrainers")
+    @Cacheable(value = "allTrainers", key = "'all'")
     public List<TrainerResponseDTO> getAllTrainer(String token) {
         return userClient.getAllTrainers(token);
     }
@@ -149,8 +146,6 @@ public class AdminService {
         log.info("Calling course-service moderation: courseId={}, action={}", courseId, action);
         
         if (courseId == null || courseId.isBlank()) {
-            // FETCH mode: return pending courses
-            log.info("Fetching unverified courses for admin");
             java.util.List<com.example.admin_service.dto.response.CourseResponseDTO> allCourses = courseClient.getAllCoursesAdmin(token);
             java.util.List<com.example.admin_service.dto.response.CourseResponseDTO> pendingCourses = new java.util.ArrayList<>();
             if (allCourses != null) {
@@ -160,19 +155,6 @@ public class AdminService {
                     }
                 }
             }
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("data", pendingCourses);
-            response.put("message", "Pending courses fetched successfully");
-            return response;
-        }
-        
-        com.example.admin_service.dto.request.CourseModerationRequest request = new com.example.admin_service.dto.request.CourseModerationRequest();
-        request.setAction(action);
-        request.setRemarks(remarks);
-        
-        Map<String, Object> response = courseClient.reviewCourse(token, courseId, request);
-        log.info("Course-service moderation response received for courseId={}", courseId);
         return response;
     }
 
@@ -249,7 +231,7 @@ public class AdminService {
         return "Password Changed Successfully.";
     }
 
-    @Cacheable(value = "pendingPayouts")
+    @Cacheable(value = "pendingPayouts", key = "'allPayouts'")
     public List<PayoutRequest> getAllPayouts(String token) {
         try {
             log.info("Calling Payment service for the response..");
@@ -260,7 +242,7 @@ public class AdminService {
         }
     }
 
-    @Cacheable(value = "pendingPayouts")
+    @Cacheable(value = "transactionHistory", key = "'all'")
     public TransactionHistoryResponse getAllTransactionHistory(){
         try{
             log.info("Calling Paymnet Service for the response...");
@@ -272,7 +254,10 @@ public class AdminService {
     }
 
 
-    @CacheEvict(value = "pendingPayouts", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "pendingPayouts", allEntries = true),
+            @CacheEvict(value = "transactionHistory", allEntries = true)
+    })
     public String processPayoutRequest(String token, ProcessPayoutRequest request) {
         if (token == null || token.isBlank()) {
             throw new UnauthorizedPayoutAccessException("Invalid token");
@@ -285,7 +270,10 @@ public class AdminService {
         }
     }
 
-    @CacheEvict(value = "pendingPayouts", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "pendingPayouts", allEntries = true),
+            @CacheEvict(value = "transactionHistory", allEntries = true)
+    })
     public String processPayoutRequestByPath(String token, String action, String payoutId, String remarks) {
         if (!action.equalsIgnoreCase("APPROVE") && !action.equalsIgnoreCase("REJECT") && !action.equalsIgnoreCase("HOLD")) {
             throw new InvalidPayoutActionException("Invalid action: " + action);
