@@ -99,10 +99,13 @@ public class AdminService {
             Map<String, Object> response = new HashMap<>();
             response.put("data", userClient.getAllPendingTrainers(token));
             response.put("message", "Pending trainers fetched successfully");
-    @CacheEvict(value = "allTrainers", allEntries = true)
-    public Map<String, Object> reviewTrainerProfile(String token, String trainerId, String action, String remarks) {
-        log.info("Review trainer profile request | trainerId={} | action={}", trainerId, action);
-        Map<String, Object> response = userClient.reviewTrainerProfile(token, trainerId, action, remarks);
+            return response;
+        }
+
+        com.example.admin_service.dto.request.TrainerReviewRequest req = new com.example.admin_service.dto.request.TrainerReviewRequest();
+        req.setAction(action);
+        req.setRemarks(remarks);
+        Object response = authClient.reviewTrainer(token, trainerId, req);
 
         try {
             if ("APPROVE".equalsIgnoreCase(action)) {
@@ -146,6 +149,8 @@ public class AdminService {
         log.info("Calling course-service moderation: courseId={}, action={}", courseId, action);
         
         if (courseId == null || courseId.isBlank()) {
+            // FETCH mode: return pending courses
+            log.info("Fetching unverified courses for admin");
             java.util.List<com.example.admin_service.dto.response.CourseResponseDTO> allCourses = courseClient.getAllCoursesAdmin(token);
             java.util.List<com.example.admin_service.dto.response.CourseResponseDTO> pendingCourses = new java.util.ArrayList<>();
             if (allCourses != null) {
@@ -155,6 +160,19 @@ public class AdminService {
                     }
                 }
             }
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("data", pendingCourses);
+            response.put("message", "Pending courses fetched successfully");
+            return response;
+        }
+        
+        com.example.admin_service.dto.request.CourseModerationRequest request = new com.example.admin_service.dto.request.CourseModerationRequest();
+        request.setAction(action);
+        request.setRemarks(remarks);
+        
+        Map<String, Object> response = courseClient.reviewCourse(token, courseId, request);
+        log.info("Course-service moderation response received for courseId={}", courseId);
         return response;
     }
 
