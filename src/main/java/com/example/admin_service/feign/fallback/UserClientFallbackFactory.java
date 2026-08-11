@@ -1,6 +1,7 @@
 package com.example.admin_service.feign.fallback;
 
 import com.example.admin_service.feign.UserClient;
+import com.example.admin_service.dto.response.AdminResponseDTO;
 import com.example.admin_service.dto.response.LearnerResponseDTO;
 import com.example.admin_service.dto.response.TrainerResponseDTO;
 import com.example.admin_service.exceptions.DownstreamServiceException;

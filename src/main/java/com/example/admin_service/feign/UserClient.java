@@ -1,8 +1,10 @@
 package com.example.admin_service.feign;
 
+import com.example.admin_service.dto.response.AdminResponseDTO;
 import com.example.admin_service.dto.response.LearnerResponseDTO;
 import com.example.admin_service.dto.response.TrainerResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.github.resilience4j.retry.annotation.Retry;
 import java.util.List;

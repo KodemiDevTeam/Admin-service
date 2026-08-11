@@ -18,7 +18,9 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CourseResponseDTO {
-
+    private String courseId;
+    private String title;
+    private String status;
     private List<LessonResponseDTO> lessons;
 
     public void maskVideoContent() {

@@ -7,5 +7,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AdminLoginRequest {
-
+    private String adminId;
+    private String email;
+    private AdminRole adminRole;
+    private String username;
 }

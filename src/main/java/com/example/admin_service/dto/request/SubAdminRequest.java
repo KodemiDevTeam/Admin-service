@@ -7,5 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SubAdminRequest {
-
+    private String email;
+    private String username;
+    private AdminRole adminRole;
 }

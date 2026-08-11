@@ -1,6 +1,7 @@
 package com.example.admin_service.service.notification;
 
 import com.example.admin_service.client.notification.NotificationClient;
+import com.example.admin_service.dto.notification.NotificationRequest;
 import com.example.admin_service.dto.notification.BroadcastNotificationRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

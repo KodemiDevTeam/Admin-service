@@ -1,6 +1,7 @@
 package com.example.admin_service.feign;
 
 import com.example.admin_service.dto.notification.BroadcastNotificationRequest;
+import com.example.admin_service.dto.notification.NotificationRequest;
 import feign.RequestInterceptor;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Value;
