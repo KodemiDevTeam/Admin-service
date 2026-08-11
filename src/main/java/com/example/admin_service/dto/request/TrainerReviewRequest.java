@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TrainerReviewRequest {
-    private String action;
-    private String remarks;
+
+
 }

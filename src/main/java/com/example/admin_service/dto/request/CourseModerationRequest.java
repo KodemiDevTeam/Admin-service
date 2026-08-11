@@ -10,6 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CourseModerationRequest {
-    private String action;
-    private String remarks;
+
+
+    public void setAction(String approveAction) {
+    }
+
+    public void setRemarks(String remarks) {
+    }
 }

@@ -40,15 +40,12 @@ public class RoleCheckAspect {
                             "This usually happens outside an HTTP request thread."
             );
         }
-
         HttpServletRequest request = attributes.getRequest();
-
         String token = request.getHeader("Authorization");
-
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing token");
         }
-        String role = jwtUtil.extractRole(token);;
+        String role = jwtUtil.extractRole(token);
         if (role == null) {
             throw new NullPointerException("Value Not Found.");
         }

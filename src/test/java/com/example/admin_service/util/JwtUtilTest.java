@@ -17,18 +17,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JwtUtilTest {
 
+    private static final String secret = "my-32-character-ultra-secure-and-ultra-long-secret";
+    private static final String TEST_USER_ID = "user-100";
+    private static final String TEST_EMAIL = "test@domain.com";
+    private static final String TEST_ROLE = "ADMIN";
+
     private JwtUtil jwtUtil;
-    private final String SECRET = "my-32-character-ultra-secure-and-ultra-long-secret";
 
     @BeforeEach
     void setUp() {
         jwtUtil = new JwtUtil();
-        ReflectionTestUtils.setField(jwtUtil, "secretKeyString", SECRET);
+        ReflectionTestUtils.setField(jwtUtil, "secretKeyString", secret);
     }
 
     private String createTestToken(String userId, String email, String role) {
-        Key key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
-        
+        Key key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("email", email);
@@ -45,19 +49,19 @@ public class JwtUtilTest {
 
     @Test
     void testExtractUserId() {
-        String token = createTestToken("user-100", "test@domain.com", "ADMIN");
-        assertEquals("user-100", jwtUtil.extractUserId(token));
+        String token = createTestToken(TEST_USER_ID, TEST_EMAIL, TEST_ROLE);
+        assertEquals(TEST_USER_ID, jwtUtil.extractUserId(token));
     }
 
     @Test
     void testExtractEmail() {
-        String token = createTestToken("user-100", "test@domain.com", "ADMIN");
-        assertEquals("test@domain.com", jwtUtil.extractEmail("Bearer " + token));
+        String token = createTestToken(TEST_USER_ID, TEST_EMAIL, TEST_ROLE);
+        assertEquals(TEST_EMAIL, jwtUtil.extractEmail("Bearer " + token));
     }
 
     @Test
     void testExtractRole() {
-        String token = createTestToken("user-100", "test@domain.com", "ADMIN");
-        assertEquals("ADMIN", jwtUtil.extractRole(token));
+        String token = createTestToken(TEST_USER_ID, TEST_EMAIL, TEST_ROLE);
+        assertEquals(TEST_ROLE, jwtUtil.extractRole(token));
     }
 }

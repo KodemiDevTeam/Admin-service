@@ -8,14 +8,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class InvalidTokenExceptionTest {
 
     @Test
-    void testMessageConstructor_withNullCause() {
+    void testMessageConstructorwithNullCause() {
         InvalidTokenException ex = new InvalidTokenException("Invalid Token", null);
         assertEquals("Invalid Token", ex.getMessage());
         assertNull(ex.getCause());
     }
 
     @Test
-    void testMessageConstructor_withExpiredJwtException() {
+    void testMessageConstructorwithExpiredJwtException() {
         ExpiredJwtException cause = new ExpiredJwtException(null, null, "Expired");
         InvalidTokenException ex = new InvalidTokenException("Token expired", cause);
 

@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AdminNotFoundExceptionTest {
+
+    private static final String NOT_FOUND = "Not found";
+
     @Test
     void testMessageConstructor() {
         AdminNotFoundException ex = new AdminNotFoundException("Not found");

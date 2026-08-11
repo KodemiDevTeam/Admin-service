@@ -17,6 +17,8 @@ import static org.mockito.Mockito.*;
 
 public class AdminRepositoryTest {
 
+    private static final String ADMIN_ID = "admin1";
+
     @Mock
     private DynamoDBMapper dynamoDBMapper;
 
@@ -35,7 +37,7 @@ public class AdminRepositoryTest {
     void testSave() {
         Admin admin = new Admin();
         String result = adminRepository.save(admin);
-        
+
         verify(dynamoDBMapper, times(1)).save(admin);
         assertEquals("Admin Created Successfully", result);
     }
@@ -43,60 +45,60 @@ public class AdminRepositoryTest {
     @Test
     void testFindById() {
         Admin admin = new Admin();
-        admin.setAdminId("admin1");
-        
-        when(dynamoDBMapper.load(Admin.class, "admin1")).thenReturn(admin);
-        
-        Admin result = adminRepository.findById("admin1");
-        
+        admin.setAdminId(ADMIN_ID);
+
+        when(dynamoDBMapper.load(Admin.class, ADMIN_ID)).thenReturn(admin);
+
+        Admin result = adminRepository.findById(ADMIN_ID);
+
         assertEquals(admin, result);
-        verify(dynamoDBMapper, times(1)).load(Admin.class, "admin1");
+        verify(dynamoDBMapper, times(1)).load(Admin.class, ADMIN_ID);
     }
 
     @Test
-    void testFindByRole_Found() {
+    void testFindByRoleFound() {
         Admin admin = new Admin();
         admin.setAdminId("a1");
-        
+
         when(paginatedQueryList.isEmpty()).thenReturn(false);
         when(paginatedQueryList.get(0)).thenReturn(admin);
-        
+
         when(dynamoDBMapper.query(eq(Admin.class), any(DynamoDBQueryExpression.class)))
                 .thenReturn(paginatedQueryList);
-                
+
         Admin result = adminRepository.findByRole(AdminRole.SUPER_ADMIN);
-        
+
         assertNotNull(result);
         assertEquals("a1", result.getAdminId());
     }
 
     @Test
-    void testFindByRole_NotFound() {
+    void testFindByRoleNotFound() {
         when(paginatedQueryList.isEmpty()).thenReturn(true);
         when(dynamoDBMapper.query(eq(Admin.class), any(DynamoDBQueryExpression.class)))
                 .thenReturn(paginatedQueryList);
-                
+
         Admin result = adminRepository.findByRole(AdminRole.COURSE_ADMIN);
-        
+
         assertNull(result);
     }
 
     @Test
-    void testDelete_AdminExists() {
+    void testDeleteAdminExists() {
         Admin admin = new Admin();
         when(dynamoDBMapper.load(Admin.class, "a1")).thenReturn(admin);
-        
+
         adminRepository.delete("a1");
-        
+
         verify(dynamoDBMapper, times(1)).delete(admin);
     }
 
     @Test
-    void testDelete_AdminDoesNotExist() {
+    void testDeleteAdminDoesNotExist() {
         when(dynamoDBMapper.load(Admin.class, "a1")).thenReturn(null);
-        
+
         adminRepository.delete("a1");
-        
+
         verify(dynamoDBMapper, times(0)).delete(any());
     }
 }

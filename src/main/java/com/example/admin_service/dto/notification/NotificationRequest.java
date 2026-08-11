@@ -12,12 +12,5 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificationRequest {
-    private String userId;
-    private String title;
-    private String message;
-    private NotificationType type;
-    private List<NotificationChannel> channels;
-    private String referenceId;
-    private String referenceType;
-    private Map<String, Object> metadata;
+
 }

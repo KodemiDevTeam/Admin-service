@@ -26,9 +26,10 @@ class RoleTest {
 
     @Test
     void testInvalidValueOf() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            Role.valueOf("INVALID_ROLE");
-        });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Role.valueOf("INVALID_ROLE")
+        );
     }
 
     @Test

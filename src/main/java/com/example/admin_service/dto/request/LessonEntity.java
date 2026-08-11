@@ -11,19 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LessonEntity {
-    private String lessonId;
-    private String moduleId;
-    private String title;
-    private String description;
-    private Integer duration;
-    private Integer orderIndex;
-    private List<ContentItem> contentKey;
-    private Date createdAt;
-    private Date updatedAt;
-    private String lessonType;
-    private String liveSessionId;
-    private Date scheduledAt;
-    private String videoKey;
+
 
     public static class ContentItem {
         private String type;

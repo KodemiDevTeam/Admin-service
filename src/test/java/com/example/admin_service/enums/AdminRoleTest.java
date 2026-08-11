@@ -28,14 +28,13 @@ class AdminRoleTest {
         assertEquals(AdminRole.COURSE_ADMIN, AdminRole.valueOf("COURSE_ADMIN"));
         assertEquals(AdminRole.PAYMENT_ADMIN, AdminRole.valueOf("PAYMENT_ADMIN"));
     }
-
     @Test
     void testValueOfInvalid() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            AdminRole.valueOf("INVALID_ROLE");
-        });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> AdminRole.valueOf("INVALID_ROLE")
+        );
     }
-
     @Test
     void testToString() {
         assertEquals("SUPER_ADMIN", AdminRole.SUPER_ADMIN.toString());

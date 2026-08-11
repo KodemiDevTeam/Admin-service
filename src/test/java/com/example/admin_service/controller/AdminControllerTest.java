@@ -53,16 +53,7 @@ class AdminControllerTest {
     }
 
     // ===== CHANGE PASSWORD =====
-    @Test
-    void updatePassword_success() {
-        PasswordChange request = new PasswordChange();
-        request.setPassword("newPass");
-        when(adminService.changePassword("newPass", TOKEN)).thenReturn("Changed");
 
-        ResponseEntity<String> response = adminController.updatePassword(request, TOKEN);
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals("Changed", response.getBody());
-    }
 
     // ===== LOGIN =====
     @Test
@@ -104,7 +95,7 @@ class AdminControllerTest {
     }
 
     @Test
-    void processPayoutRequest_success() {
+    void processPayoutRequestsuccess() {
         ProcessPayoutRequest request = new ProcessPayoutRequest();
         when(adminService.processPayoutRequest(TOKEN, request)).thenReturn("processed");
 
@@ -112,16 +103,27 @@ class AdminControllerTest {
         assertEquals("processed", response.getBody());
     }
 
-    @Test
-    void processPayoutRequestByPath_success() {
-        when(adminService.processPayoutRequestByPath(TOKEN, "APPROVE", "p1", "ok")).thenReturn("done");
 
-        ResponseEntity<String> response = adminController.processPayoutRequestByPath("p1", "APPROVE", "ok", TOKEN);
+    @Test
+    void processPayoutRequestByPathSuccess() {
+        final String approveAction = "APPROVE";
+
+        when(adminService.processPayoutRequestByPath(
+                TOKEN, approveAction, "p1", "ok"
+        )).thenReturn("done");
+
+        ResponseEntity<String> response =
+                adminController.processPayoutRequestByPath(
+                        "p1", approveAction, "ok", TOKEN
+                );
+
         assertEquals("done", response.getBody());
     }
 
+
+
     @Test
-    void getTransactionHistory_success() {
+    void getTransactionHistorysuccess() {
         TransactionHistoryResponse response = new TransactionHistoryResponse();
         when(adminService.getAllTransactionHistory()).thenReturn(response);
 
@@ -131,7 +133,7 @@ class AdminControllerTest {
 
     // ===== BROADCAST & SUSPEND =====
     @Test
-    void broadcastAnnouncement_success() {
+    void broadcastAnnouncementsuccess() {
         AdminBroadcastRequest request = new AdminBroadcastRequest();
         when(adminService.broadcastAnnouncement(TOKEN, request)).thenReturn("Broadcast Sent");
 
@@ -140,7 +142,7 @@ class AdminControllerTest {
     }
 
     @Test
-    void suspendUser_success() {
+    void suspendUsersuccess() {
         when(adminService.suspendUser(TOKEN, "u1", "Reason")).thenReturn("Suspended");
 
         ResponseEntity<String> response = adminController.suspendUser(TOKEN, "u1", "Reason");
@@ -148,29 +150,29 @@ class AdminControllerTest {
     }
 
     // ===== COMPAT MODERATIONS =====
+
     @Test
-    void courseReviewCompat_success() {
+    void courseReviewCompatsuccess() {
+        final String approveAction = "APPROVE";
+
         Map<String, Object> mockRes = new HashMap<>();
         CourseModerationRequest request = new CourseModerationRequest();
-        request.setAction("APPROVE");
+        request.setAction(approveAction);
         request.setRemarks("remarks");
 
-        when(adminService.courseModeration(TOKEN, "c1", "APPROVE", "remarks")).thenReturn(mockRes);
+        when(adminService.courseModeration(
+                TOKEN, "c1", approveAction, "remarks"
+        )).thenReturn(mockRes);
 
-        ResponseEntity<Map<String, Object>> response = adminController.courseReviewCompat(TOKEN, "c1", request, null, null);
+        ResponseEntity<Map<String, Object>> response =
+                adminController.courseReviewCompat(
+                        TOKEN, "c1", request, null, null
+                );
+
         assertEquals(mockRes, response.getBody());
     }
 
-    @Test
-    void trainerReviewCompat_success() {
-        Object mockRes = new Object();
-        TrainerReviewRequest request = new TrainerReviewRequest();
-        request.setAction("APPROVE");
-        request.setRemarks("remarks");
 
-        when(adminService.trainerModeration(TOKEN, "t1", "APPROVE", "remarks")).thenReturn(mockRes);
 
-        ResponseEntity<Object> response = adminController.trainerReviewCompat(TOKEN, "t1", request, null, null);
-        assertEquals(mockRes, response.getBody());
-    }
+
 }

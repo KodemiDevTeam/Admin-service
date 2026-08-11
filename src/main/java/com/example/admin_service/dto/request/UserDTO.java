@@ -8,14 +8,4 @@ import lombok.Setter;
 
 public class UserDTO {
 
-    private String userId;
-    private String name;
-    private String email;
-    private String username;
-    private Boolean isActive;
-    private Boolean isVerified;
-    private Long lastLogin;
-    private Role role;
-
-
 }
