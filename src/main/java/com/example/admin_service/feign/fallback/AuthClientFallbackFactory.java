@@ -3,7 +3,6 @@ package com.example.admin_service.feign.fallback;
 import com.example.admin_service.feign.AuthClient;
 import com.example.admin_service.dto.response.AdminLoginRequest;
 import com.example.admin_service.dto.request.UserDTO;
-import com.example.admin_service.dto.request.TrainerReviewRequest;
 import com.example.admin_service.exceptions.DownstreamServiceException;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.http.ResponseEntity;
