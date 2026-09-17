@@ -45,16 +45,20 @@ pipeline {
             }
         }
 
-        stage('Build (No Tests)') {
+        stage('Build and Test') {
             steps {
+
+                bat 'echo ===== BUILD AND RUN TESTS ====='
+
+                bat 'mvn --version'
+
                 bat '''
-                    echo ===== BUILD WITHOUT TESTS =====
-                    mvn clean verify -DskipTests
+                    mvn clean verify
                 '''
             }
         }
 
-        stage('SonarQube Analysis (No Tests)') {
+        stage('SonarQube Analysis') {
             steps {
 
                 withSonarQubeEnv('SonarQube2') {
@@ -67,7 +71,7 @@ pipeline {
                     ]) {
 
                         bat '''
-                            echo ===== SONAR ANALYSIS =====
+                            echo ===== SONARQUBE ANALYSIS =====
 
                             mvn sonar:sonar ^
                             -Dsonar.projectKey=%SONAR_PROJECT_KEY% ^
@@ -92,6 +96,7 @@ pipeline {
             steps {
                 bat '''
                     echo ===== OWASP DEPENDENCY CHECK =====
+
                     mvn org.owasp:dependency-check-maven:check
                 '''
             }
@@ -109,8 +114,10 @@ pipeline {
 
         stage('Archive Reports') {
             steps {
-                archiveArtifacts artifacts: '**/target/*.html, **/target/*.xml',
+                archiveArtifacts(
+                    artifacts: '**/target/*.html, **/target/*.xml',
                     allowEmptyArchive: true
+                )
             }
         }
     }
@@ -118,7 +125,7 @@ pipeline {
     post {
 
         success {
-            echo 'SUCCESS: Build + Sonar completed'
+            echo 'SUCCESS: Build + Tests + SonarQube completed'
         }
 
         failure {
